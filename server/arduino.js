@@ -1,5 +1,7 @@
 var Arduino = (function(){
 	
+	console.log('loads Arduino js class');
+
 	function Arduino(){
 		this._isConnected = false;
 		this.nativeInterface = nativeInterface;
