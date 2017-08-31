@@ -1,14 +1,55 @@
+/*
+	arduino js class
+
+	pin assign
+	
+	pin2  output input servo 
+	pin3  output input PWM servo 
+	pin4  output input servo 
+	pin5  output input PWM servo 
+	pin6  output input PWM servo 
+	pin7  output input servo 
+	pin8  output input servo 
+	pin9  output input PWM servo 
+	pin10 output input PWM servo 
+	pin11 output input PWM servo 
+	pin12 output input servo 
+	pin13 output input servo 
+	pin14 output input Analog servo 
+	pin15 output input Analog servo  
+	pin16 output input Analog servo 
+	pin17 output input Analog servo 
+	pin18 output input Analog servo 
+	pin19 output input Analog servo 
+
+*/
+
 var Arduino = (function(){
 	
 	console.log('loads Arduino js class');
 
 	function Arduino(){
 		this._isConnected = false;
-		this.nativeInterface = nativeInterface;
+		if(typeof(nativeInterface) === 'undefined'){
+
+			console.warn('Androino: Cannot work in the browser.');
+			this.nativeInterface = {};
+
+		} else {
+			
+			this.nativeInterface = nativeInterface;
+
+		}
 	}
 
+	// pin modes
 	Arduino.INPUT = "INPUT";
 	Arduino.OUTPUT = "OUTPUT";
+	Arduino.PWM = "PWM";
+	Arduino.ANALOG = "ANALOG";
+	Arduino.SERVO = "SERVO";
+
+	// pin outputs
 	Arduino.HIGH = "HIGH";
 	Arduino.LOW = "LOW";
 

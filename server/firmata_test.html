@@ -1,0 +1,115 @@
+<html>
+<head>
+<title>Firmata Test</title>
+
+<link href="./styles/firmata_test.css" rel="stylesheet" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="./scripts/vue.js"></script>
+<script type="text/javascript" src="./scripts/arduino.js"></script>
+
+<script type="text/javascript">
+'use strict';
+$(function(){
+     
+    var arduino = new Arduino();
+
+    var arduinoPins = [
+        {name: 'pin2', pinNo:2, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin3', pinNo:3, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.PWM, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin4', pinNo:4, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin5', pinNo:5, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.PWM, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin6', pinNo:6, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.PWM, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin7', pinNo:7, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin8', pinNo:8, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin9', pinNo:9, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.PWM, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin10', pinNo:10, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.PWM, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin11', pinNo:11, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.PWM, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin12', pinNo:12, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin13', pinNo:13, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
+        {name: 'pin14', pinNo:14, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.ANALOG, Arduino.SERVO], defaultMode: Arduino.ANALOG},
+        {name: 'pin15', pinNo:15, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.ANALOG, Arduino.SERVO], defaultMode: Arduino.ANALOG},
+        {name: 'pin16', pinNo:16, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.ANALOG, Arduino.SERVO], defaultMode: Arduino.ANALOG},
+        {name: 'pin17', pinNo:17, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.ANALOG, Arduino.SERVO], defaultMode: Arduino.ANALOG},
+        {name: 'pin18', pinNo:18, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.ANALOG, Arduino.SERVO], defaultMode: Arduino.ANALOG},
+        {name: 'pin19', pinNo:19, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.ANALOG, Arduino.SERVO], defaultMode: Arduino.ANALOG}
+    ];
+
+    var pinComponent = {
+        template: `
+            <li> 
+                <span class="pin-name">{{pin.name}}</span>
+                <select v-model="crtPinMode" v-on:change="onChangeMode" class="pin-mode-select">
+                    <option 
+                        v-for="mode in pin.modes"
+                        v-bind:value="mode"
+                        v-bind:mode="mode">
+                        {{mode}}
+                    </option>
+                </select>
+                <button v-if="crtPinMode === 'OUTPUT'" v-on:click="onClickOutput" class="pin-output-btn">{{crtPinOutput}}</button>
+                <input v-if="crtPinMode === 'PWM'" v-model="pwmValue" v-on:change="onChangePWMValue" type="range" name="range">
+            </li>`,
+        props: ['pin', 'pinMode', 'pinOutput'],
+        data: function(){
+            return {
+                crtPinMode: this.pinMode,
+                crtPinOutput: this.pinOutput,
+                pwmValue: 0
+            }
+        },
+        computed: {
+        },
+        methods: {
+            onChangeMode: function(){
+                console.log('change mode ' + this.crtPinMode + this.pin.pinNo);
+                arduino.pinMode(this.pin.pinNo ,this.crtPinMode);
+            },
+            onClickOutput: function(){
+                console.log('click output');
+                this.crtPinOutput = this.crtPinOutput === Arduino.OUTPUT ? Arduino.INPUT : Arduino.OUTPUT;
+                arduino.digitalWrite(this.pin.pinNo, this.crtPinOutput);
+            },
+            onChangePWMValue: function(e){
+                console.log('PWM value change ');
+                console.log(this.pwmValue); // 0-100
+                arduino.analogWrite(this.pin.pinNo, Math.floor(this.pwmValue*2.55));
+
+            }
+        }
+    };
+
+    var pinList = new Vue({
+        el: '#pin-list',
+        data: {
+            pinList: arduinoPins,
+            outputDefault: Arduino.LOW
+        },
+        components: {
+            'pinComponent': pinComponent
+        } 
+    });
+       
+});
+        
+</script>
+</head>
+<body>
+    <div class="info">
+        <h1> Firmata Test For Androino.</h1>
+    </div>
+    <a href="javascript:history.back()">Go Back</a>
+    <div class="test-container">
+        <ul id="pin-list">
+            <pin-component 
+                v-for='(pin, index) in pinList'
+                v-bind:pin='pin'
+                v-bind:pin-mode='pin.defaultMode'
+                v-bind:pin-output='outputDefault'
+                v-bind:key='index'
+            ></pin-component>
+        </ul>
+
+    </div>
+    
+</body>
+</html>
