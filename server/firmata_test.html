@@ -64,6 +64,8 @@ $(function(){
                 </select>
                 <button v-if="crtPinMode === 'OUTPUT'" v-on:click="onClickOutput" class="pin-output-btn">{{crtPinOutput}}</button>
                 <input v-if="crtPinMode === 'PWM'" v-model="pwmValue" v-on:change="onChangePWMValue" type="range" name="range">
+                <button v-if="crtPinMode === 'INPUT'" disabled='disabled' class="pin-input-btn">{{crtPinInput}}</button>
+                <span v-if="crtPinMode === 'ANALOG'"" class="analog-value"> {{analogInputValue}}</span>
             </li>
             */}).toString().match(/\/\*([^]*)\*\//)[1],
         props: ['pin', 'pinMode', 'pinOutput'],
@@ -71,19 +73,42 @@ $(function(){
             return {
                 crtPinMode: this.pinMode,
                 crtPinOutput: this.pinOutput,
-                pwmValue: 0
+                pwmValue: 0,
+                analogInputValue: 0,
+                crtPinInput: Arduino.LOW
             }
         },
         computed: {
         },
+        created: function(){
+            var readIntervalTime = 500;
+            (function (_this){
+                (function updateValue(){
+                    switch(_this.crtPinMode){
+                        case Arduino.INPUT:
+                            _this.crtPinInput = arduino.digitalRead(_this.pin.pinNo);
+                            //console.log('input update ' + _this.crtPinInput);
+
+                            break;
+                        case Arduino.ANALOG:
+                            _this.analogInputValue = arduino.analogRead(_this.pin.pinNo);
+                            //console.log('analog input update ' + _this.analogInputValue);
+                            break;
+                    }
+                    setTimeout( updateValue, readIntervalTime);
+                })();
+            })(this);
+        },
         methods: {
             onChangeMode: function(){
-                console.log('change mode ' + this.crtPinMode + this.pin.pinNo);
+              
+                console.log('change mode ' + this.crtPinMode + ' ' + this.pin.pinNo);
                 arduino.pinMode(this.pin.pinNo ,this.crtPinMode);
+
             },
             onClickOutput: function(){
-                console.log('click output');
-                this.crtPinOutput = this.crtPinOutput === Arduino.OUTPUT ? Arduino.INPUT : Arduino.OUTPUT;
+                this.crtPinOutput = this.crtPinOutput === Arduino.HIGH ? Arduino.LOW : Arduino.HIGH;
+                console.log('click output ' + this.crtPinOutput);
                 arduino.digitalWrite(this.pin.pinNo, this.crtPinOutput);
             },
             onChangePWMValue: function(e){

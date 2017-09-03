@@ -109,12 +109,14 @@ var Arduino = (function(){
 			},
 			digitalRead: function(port){
 				//return this.nativeInterface.digitalRead(port);
+				return Arduino.HIGH;
 			},
 			analoglWrite: function(port, value){
 				//this.nativeInterface.analogWrite(port, value);
 			},
 			analogRead: function(port){
 				//return this.nativeInterface.analogRead(port);
+				return 123;
 			}, 
 			debugFunc: function(){
 				//this.nativeInterface.debugFunc();
