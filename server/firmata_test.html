@@ -51,20 +51,21 @@ $(function(){
                 <input v-if="crtPinMode === 'PWM'" v-model="pwmValue" v-on:change="onChangePWMValue" type="range" name="range">
             </li>`,
             */
-        template: "\
-            <li> \
-                <span class=\"pin-name\">{{pin.name}}</span>\
-                <select v-model=\"crtPinMode\" v-on:change=\"onChangeMode\" class=\"pin-mode-select\">\
-                    <option\ 
-                        v-for=\"mode in pin.modes\"\
-                        v-bind:value=\"mode\" \
-                        v-bind:mode=\"mode\">\
-                        {{mode}}\
-                    </option>\
-                </select>\
-                <button v-if=\"crtPinMode === 'OUTPUT'\" v-on:click=\"onClickOutput\" class=\"pin-output-btn\">{{crtPinOutput}}</button>\
-                <input v-if=\"crtPinMode === 'PWM'\" v-model=\"pwmValue\" v-on:change=\"onChangePWMValue\" type=\range\" name=\"range\">\
-            </li>",
+        template: (function() {/*
+            <li> 
+                <span class="pin-name">{{pin.name}}</span>
+                <select v-model="crtPinMode" v-on:change="onChangeMode" class="pin-mode-select">
+                    <option 
+                        v-for="mode in pin.modes"
+                        v-bind:value="mode"
+                        v-bind:mode="mode">
+                        {{mode}}
+                    </option>
+                </select>
+                <button v-if="crtPinMode === 'OUTPUT'" v-on:click="onClickOutput" class="pin-output-btn">{{crtPinOutput}}</button>
+                <input v-if="crtPinMode === 'PWM'" v-model="pwmValue" v-on:change="onChangePWMValue" type="range" name="range">
+            </li>
+            */}).toString().match(/\/\*([^]*)\*\//)[1],
         props: ['pin', 'pinMode', 'pinOutput'],
         data: function(){
             return {
