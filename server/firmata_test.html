@@ -54,7 +54,12 @@ $(function(){
         template: (function() {/*
             <li> 
                 <span class="pin-name">{{pin.name}}</span>
-                <select v-model="crtPinMode" v-on:change="onChangeMode" class="pin-mode-select">
+                <select 
+                    v-model="crtPinMode" 
+                    v-on:change="onChangeMode" 
+                    class="pin-mode-select"
+                    v-bind:class="[crtPinMode]">
+
                     <option 
                         v-for="mode in pin.modes"
                         v-bind:value="mode"
@@ -62,9 +67,19 @@ $(function(){
                         {{mode}}
                     </option>
                 </select>
-                <button v-if="crtPinMode === 'OUTPUT'" v-on:click="onClickOutput" class="pin-output-btn">{{crtPinOutput}}</button>
+                <button 
+                    v-if="crtPinMode === 'OUTPUT'" 
+                    v-on:click="onClickOutput"
+                    class="pin-output-btn"
+                    v-bind:class="[crtPinOutput == 'HIGH' ? 'output-high' : 'output-low']"
+                    >{{crtPinOutput}}</button>
                 <input v-if="crtPinMode === 'PWM'" v-model="pwmValue" v-on:change="onChangePWMValue" type="range" name="range">
-                <button v-if="crtPinMode === 'INPUT'" disabled='disabled' class="pin-input-btn">{{crtPinInput}}</button>
+                <button 
+                    v-if="crtPinMode === 'INPUT'" 
+                    disabled='disabled'                     
+                    class="pin-input-btn"
+                    v-bind:class="[crtPinInput == 'HIGH' ? 'output-high' : 'output-low']"
+                    >{{crtPinInput}}</button>
                 <span v-if="crtPinMode === 'ANALOG'"" class="analog-value"> {{analogInputValue}}</span>
             </li>
             */}).toString().match(/\/\*([^]*)\*\//)[1],
@@ -81,6 +96,14 @@ $(function(){
         computed: {
         },
         created: function(){
+
+            // pin initialization
+            arduino.pinMode(this.pin.pinNo, this.pinMode);
+            if(this.pinMode === Arduino.OUTPUT)
+                arduino.digitalWrite(this.pin.pinNo, this.pinOutput);
+
+
+            // read setting
             var readIntervalTime = 500;
             (function (_this){
                 (function updateValue(){
@@ -137,9 +160,8 @@ $(function(){
 </head>
 <body>
     <div class="info">
-        <h1> Firmata Test For Androino.</h1>
+        <h2> Firmata Test For Androino.</h2>
     </div>
-    <a href="javascript:history.back()">Go Back</a>
     <div class="test-container">
         <ul id="pin-list">
             <pin-component 
@@ -148,10 +170,14 @@ $(function(){
                 v-bind:pin-mode='pin.defaultMode'
                 v-bind:pin-output='outputDefault'
                 v-bind:key='index'
+                class="pin-component"
             ></pin-component>
         </ul>
 
     </div>
+
+    <a href="javascript:history.back()">Go Back</a>
+
     
 </body>
 </html>

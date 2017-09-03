@@ -2,6 +2,14 @@
 	list-style: none;
     padding: 0;
 }
+.pin-component {
+	padding: 1px;
+}
+
+.pin-component:nth-child(2n) {
+	background-color: gainsboro;
+}
+
 .pin-name {
 	width: 45px;
     padding-left: 10px;
@@ -9,12 +17,48 @@
 }
 
 .pin-mode-select {	
-    color: #fff;
-   background: -webkit-linear-gradient(#779126, #779126 40%, #4a5a19);
+	height: 26px;
+	width: 110px;
+	color: #fff;
+   	background: -webkit-linear-gradient(#779126, #779126 40%, #4a5a19);
     background-color: #445803;
     -webkit-border-radius: 20px;
     -moz-border-radius: 20px;
     border-radius: 20px;
     padding-left: 15px;
+
+}
+
+.pin-mode-select.OUTPUT {	
+	background: -webkit-linear-gradient(#f5b4db, #af7b95 40%, #c32e96);
+    background-color: #af7b95;
+}
+
+.pin-mode-select.INPUT {	
+	background: -webkit-linear-gradient(#8faece, #3d6973 40%, #213d48);
+	background-color: #3d6973;
+}
+
+.pin-mode-select.SERVO {	
+	background: -webkit-linear-gradient(#f7662f, #a26304 40%, #882b00);
+	background-color: #a26304;
+}
+
+
+
+button.pin-output-btn,
+button.pin-input-btn {
+	width: 100px;
+}
+
+button.pin-output-btn.output-high,
+button.pin-input-btn.output-high {
+	background-color: #ffcfcf;
+
+}
+
+button.pin-output-btn.output-low,
+button.pin-input-btn.output-low {
+	background-color: #cfe2ff;
 
 }

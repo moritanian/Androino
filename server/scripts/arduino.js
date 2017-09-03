@@ -77,7 +77,7 @@ var Arduino = (function(){
 		digitalRead: function(port){
 			return this.nativeInterface.digitalRead(port);
 		},
-		analoglWrite: function(port, value){
+		analogWrite: function(port, value){
 			this.nativeInterface.analogWrite(port, value);
 		},
 		analogRead: function(port){
@@ -111,7 +111,7 @@ var Arduino = (function(){
 				//return this.nativeInterface.digitalRead(port);
 				return Arduino.HIGH;
 			},
-			analoglWrite: function(port, value){
+			analogWrite: function(port, value){
 				//this.nativeInterface.analogWrite(port, value);
 			},
 			analogRead: function(port){
