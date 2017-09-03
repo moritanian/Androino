@@ -1,6 +1,8 @@
 /*
 	arduino js class
 
+	communicate with arduino along firmata 
+
 	pin assign
 	
 	pin2  output input servo 
@@ -34,6 +36,7 @@ var Arduino = (function(){
 
 			console.warn('Androino: Cannot work in the browser.');
 			this.nativeInterface = {};
+			getSimulateObject(this);
 
 		} else {
 			
@@ -83,6 +86,45 @@ var Arduino = (function(){
 		debugFunc: function(){
 			this.nativeInterface.debugFunc();
 		}	
+	}
+
+	function getSimulateObject(_this){
+		_this.__proto__ = {
+			isConnected: function(){
+				return this._isConnected;
+			},
+			connect: function(){
+				this._isConnected = true;
+				return this.isConnected;
+			},
+			disconnect: function(){
+				this._isConnected = false;
+				return this._isConnected;
+			},
+			pinMode: function(port, mode){
+				//this.nativeInterface.pinMode(port, mode);
+			},
+			digitalWrite: function(port, value){
+				//this.nativeInterface.digitalWrite(port, value);
+			},
+			digitalRead: function(port){
+				//return this.nativeInterface.digitalRead(port);
+			},
+			analoglWrite: function(port, value){
+				//this.nativeInterface.analogWrite(port, value);
+			},
+			analogRead: function(port){
+				//return this.nativeInterface.analogRead(port);
+			}, 
+			debugFunc: function(){
+				//this.nativeInterface.debugFunc();
+			}	
+		}
+		/*
+		console.log(Arduino.prototype);
+		console.log(_this.__proto__);
+		console.log(_this.__proto__ === _this.constructor.prototype) ;
+		*/
 	}
 
 	// native 側から呼び出す関数郡
