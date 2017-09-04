@@ -73,7 +73,13 @@ $(function(){
                     class="pin-output-btn"
                     v-bind:class="[crtPinOutput == 'HIGH' ? 'output-high' : 'output-low']"
                     >{{crtPinOutput}}</button>
-                <input v-if="crtPinMode === 'PWM'" v-model="pwmValue" v-on:change="onChangePWMValue" type="range" name="range">
+                <input 
+                    v-if="crtPinMode === 'PWM'" 
+                    v-model="pwmValue" 
+                    v-on:change="onChangePWMValue" 
+                    type="range" name="range"
+                    class="pwm-value-range-input">
+                
                 <button 
                     v-if="crtPinMode === 'INPUT'" 
                     disabled='disabled'                     

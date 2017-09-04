@@ -32,14 +32,14 @@ var Arduino = (function(){
 
 	function Arduino(){
 		this._isConnected = false;
+		this.isSimulation = false;
 		if(typeof(nativeInterface) === 'undefined'){
 
 			console.warn('Androino: Cannot work in the browser.');
-			this.nativeInterface = {};
-			getSimulateObject(this);
+			this.nativeInterface = getDummyInterface();
+			this.isSimulation = true;
 
 		} else {
-			
 			this.nativeInterface = nativeInterface;
 
 		}
@@ -56,6 +56,17 @@ var Arduino = (function(){
 	Arduino.HIGH = "HIGH";
 	Arduino.LOW = "LOW";
 
+	// check connection
+	function preFirmataFunc(_this){
+	
+		if(!_this._isConnected){
+			if(!_this.connect())
+				return false;
+		}
+
+		return true;
+	}
+
 	Arduino.prototype = {
 		isConnected: function(){
 			return this._isConnected;
@@ -65,69 +76,80 @@ var Arduino = (function(){
 			return this.isConnected;
 		},
 		disconnect: function(){
+			if(!preFirmataFunc(this))
+				return false;
 			this._isConnected = this.nativeInterface.disconnectArduino();
 			return this._isConnected;
 		},
 		pinMode: function(port, mode){
+			if(!preFirmataFunc(this))
+				return false;
 			this.nativeInterface.pinMode(port, mode);
 		},
 		digitalWrite: function(port, value){
+			if(!preFirmataFunc(this))
+				return false;
 			this.nativeInterface.digitalWrite(port, value);
 		},
 		digitalRead: function(port){
+			if(!preFirmataFunc(this))
+				return false;
 			return this.nativeInterface.digitalRead(port);
 		},
 		analogWrite: function(port, value){
+			if(!preFirmataFunc(this))
+				return false;
 			this.nativeInterface.analogWrite(port, value);
 		},
 		analogRead: function(port){
+			if(!preFirmataFunc(this))
+				return false;
+			
+			if(port > 13)
+				port -= 14;
+
 			return this.nativeInterface.analogRead(port);
 		}, 
 		debugFunc: function(){
+			if(!preFirmataFunc(this))
+				return false;
 			this.nativeInterface.debugFunc();
 		}	
 	}
-
-	function getSimulateObject(_this){
-		_this.__proto__ = {
-			isConnected: function(){
-				return this._isConnected;
+	// #TODO visulal simulation ソフトウェア上でピンアサイン指定してシミュレーションしたい
+	function getDummyInterface() {
+		return {
+			connectArduino: function(){
+				return true;
 			},
-			connect: function(){
-				this._isConnected = true;
-				return this.isConnected;
-			},
-			disconnect: function(){
-				this._isConnected = false;
-				return this._isConnected;
+			disconnectArduino: function(){
+				return false;
 			},
 			pinMode: function(port, mode){
-				//this.nativeInterface.pinMode(port, mode);
 			},
 			digitalWrite: function(port, value){
-				//this.nativeInterface.digitalWrite(port, value);
+			
 			},
 			digitalRead: function(port){
-				//return this.nativeInterface.digitalRead(port);
 				return Arduino.HIGH;
 			},
 			analogWrite: function(port, value){
-				//this.nativeInterface.analogWrite(port, value);
+			
 			},
 			analogRead: function(port){
-				//return this.nativeInterface.analogRead(port);
 				return 123;
 			}, 
 			debugFunc: function(){
-				//this.nativeInterface.debugFunc();
 			}	
 		}
+	}
+
+	
 		/*
 		console.log(Arduino.prototype);
 		console.log(_this.__proto__);
 		console.log(_this.__proto__ === _this.constructor.prototype) ;
 		*/
-	}
 
 	// native 側から呼び出す関数郡
 	Arduino.log = function(l){

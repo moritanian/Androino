@@ -44,6 +44,10 @@
 	background-color: #a26304;
 }
 
+.pwm-value-range-input {
+	height: 10px;
+}
+
 
 
 button.pin-output-btn,
