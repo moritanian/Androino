@@ -43,25 +43,26 @@ function Odometrino(){
 	}
 
 	//
-	this.props.moveStatus = 0;
+	const MOVE_STATUS = "moveStatus";
 
-	var moveChangeEvent = function(){
-		if(_this.props.moveStatus == 0){
-			_this.props.moveStatus = 1;
+	this.addProp(MOVE_STATUS);
+
+	this.setPropsChangeListener(function(){
+		if(_this.props[MOVE_STATUS] == 0){
 			_this.turnRight();
-			_this.wait(2000, moveChangeEvent);
-		} else if(_this.props.moveStatus == 1){
-			_this.props.moveStatus = 2;
+			_this.delayChangeProp(2000, MOVE_STATUS, 1);
+		} else if(_this.props[MOVE_STATUS] == 1){
 			_this.turnLeft();
-			_this.wait(2000, moveChangeEvent);
-		} else if(_this.props.moveStatus == 2){
-			_this.props.moveStatus = 0;
+			_this.delayChangeProp(2000, MOVE_STATUS, 2);
+		} else if(_this.props[MOVE_STATUS] == 2) {
 			_this.goStraight();
-			_this.wait(1000, moveChangeEvent);
+			_this.delayChangeProp(1000, MOVE_STATUS, 0);
 		}
-	}
+	});
+
+	this.props[MOVE_STATUS] = 0;
 	
-	moveChangeEvent();
+	
 }
 
 Odometrino.prototype = Object.create(DroinoBase.prototype);
