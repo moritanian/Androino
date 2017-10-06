@@ -7,6 +7,8 @@ function DroinoBase(){
 	/*
 		props
 
+			state machine style code
+
 		function listener(){
 			return ;
 		}
@@ -14,7 +16,7 @@ function DroinoBase(){
 	var propsChangeListener;
 	this.setPropsChangeListener = function(listener){
 		propsChangeListener = listener;
-	}
+	};
 
 	this.props = {};	
 	var _props = {};
@@ -30,20 +32,22 @@ function DroinoBase(){
   			propsChangeListener();
 		});
 
-	}
+	};
 
 	this.wait = function(time, func){
 		setTimeout(func, time);
-	}
+	};
 
 	this.delayChangeProp = function(time, propName, value){
 		setTimeout(function(){
 			_this.props[propName] = value;
 		}, time)
-	}
+	};
 
 	/*
 		queue
+
+			c, c++ style code
 	*/
 	var taskQueue = [];
 
@@ -59,7 +63,7 @@ function DroinoBase(){
 		taskQueue.push({"taskName": taskName, 'func': func, 'time' : time});
 		taskQueueDispatcher.dispatchEvent({type: TaskQueueEvents.ENQUEUE_TASK});
 
-	}
+	};
 
 	var dequeueTask = function(){
 		
@@ -75,26 +79,26 @@ function DroinoBase(){
 
 		taskQueueDispatcher.dispatchEvent({type: TaskQueueEvents.DEQUEUE_TASK});
 
-	}
+	};
 
 	this.registerQueueTask = function(taskName, func){
 		this[taskName] = function(time){
 			enqueueTask(taskName, func, time);
-		}
-	}
+		};
+	};
 
 	this.queueTaskWhile = function(func){
 		taskQueueDispatcher.addEventListener(TaskQueueEvents.EMPTY_QUEUE, function(){
 			func(_this);
 		});
 		func(_this);
-	}
+	};
 
 	var startEnqueueFunc = function(){
 		dequeueTask();
 		taskQueueDispatcher.removeEventListener(TaskQueueEvents.ENQUEUE_TASK, 
 				startEnqueueFunc);
-	}
+	};
 
 	taskQueueDispatcher.addEventListener(TaskQueueEvents.EMPTY_QUEUE, function(){
 
@@ -104,6 +108,109 @@ function DroinoBase(){
 
 	taskQueueDispatcher.addEventListener(TaskQueueEvents.ENQUEUE_TASK, startEnqueueFunc);
 
+	/*
+		promise 
 
+			js promise style code
+
+			example
+
+			new Asyncable()
+				.asyncTask(func)
+				.asyncWait(1000)
+				.asyncTask(func)
+				.asyncWait(10000)
+	*/
+	this.sleep = function(time) {
+	  	return new Promise(resolve => { 
+	    	setTimeout(() => { 
+	      		resolve();
+	   		}, time);
+	  	});
+	}
+
+	/*
+	this.Asyncable = (function(){
+
+		var Asyncable = function(promise){
+
+			var scope = this;
+			
+			var attachedTaskNames = [];
+
+			if(!promise){
+				promise = asyncTask();
+			}
+
+
+			function asyncTask(func){
+				return new Promise(function(resolve, reject) {
+					if(func){
+						func();
+					}
+	    			resolve();
+	    		});
+			}
+
+			function asyncWait(delay){
+	 			return new Promise(function(resolve, reject){
+	        		setTimeout(resolve, delay);
+	        	});
+			}
+
+			this.asyncTask = function(func){
+				var promiseObj = promise.then(function(){return asyncTask(func)});
+				return attachTasks(new Asyncable(promiseObj));
+			};
+
+			this.asyncWait = function(delay){
+				var promiseObj = promise.then(function(){return asyncWait(delay)});
+				return attachTasks(new Asyncable(promiseObj));
+			};
+
+			this.addAsyncTask = function(taskName, func){
+				
+				this.addTask(taskName, function(){
+					return attachTasks(new Asyncable(new Promise(func)));
+				});
+
+				return this;
+
+			};
+
+			this.addSyncTask = function(taskName, func){
+				
+				this.addTask(taskName, function(){
+					return scope.asyncTask(func);
+				});
+
+				return this;
+
+			};
+
+			this.addTask = function(taskName, func){
+
+				attachedTaskNames.push(taskName);
+
+				this[taskName] = func;
+
+			}
+
+			function attachTasks(targetObj){
+
+				for(var index in attachedTaskNames){
+					var taskName = attachedTaskNames[index];
+					targetObj.addTask(taskName, scope[taskName]);
+				}
+
+				return targetObj;
+			
+			}
+		}
+
+		return Asyncable;
+
+	})();
+	*/
 
 }

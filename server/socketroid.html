@@ -1,24 +1,25 @@
 <html>
 <head>
-<title>Androino Sample</title>
+<title>Androino Socket sample</title>
 
 <link href="./styles/style.css" rel="stylesheet" />
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script type="text/javascript" src="./scripts/core/arduino.js"></script>
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
 <script type="text/javascript" src="./scripts/core/droino-util.js"></script>
-
 <script type="text/javascript" src="./scripts/core/droino-base.js"></script>
-<!--<script type="text/javascript" src="./scripts/odometrino.js"></script>  -->
-<script type="text/javascript" src="./scripts/async-droino.js"></script> 
-<!--<script type="text/javascript" src="./scripts/queue-droino.js"></script> -->
+
+<!-- set your nodejs socket server script url -->
+<script src="https://rtc-world-s.herokuapp.com/socket.io/socket.io.js"></script> 
+
+
+<script type="text/javascript" src="./scripts/socketroid.js"></script>
 
 
 <script type="text/javascript">
 'use strict';
-$(function(){
-   var odometrino = new Odometrino();
-});
+window.onload = function(){
+   var socketroid = new Socketroid();
+}
         
 </script>
 </head>

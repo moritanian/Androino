@@ -128,13 +128,13 @@ var Arduino = (function(){
 			pinMode: function(port, mode){
 			},
 			digitalWrite: function(port, value){
-			
+				console.log("dummy digitalWrite " + port + ": " + value);
 			},
 			digitalRead: function(port){
 				return Arduino.HIGH;
 			},
 			analogWrite: function(port, value){
-			
+				console.log("dummy alongWrite " + port + ": " + value);
 			},
 			analogRead: function(port){
 				return 123;
