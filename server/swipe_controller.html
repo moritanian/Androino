@@ -101,121 +101,135 @@
 
 		  	//スワイプ開始時の横方向の座標を格納
 		  	function onTouchStart(e) {
-		    	//クラス名に .drag を追加
-			    $(this).addClass("drag");
+		    	
 			    //タッチデイベントとマウスのイベントの差異を吸収
 			    //if(e.type === "mousedown") {
 			    if(e.type === "mousedown") {
-			        var event = e;
+			        var events = [e];
 			    } else {
-			    	var event = getTouchEvent(e);
+			    	var events = getTouchEvents(e);
 			    }
 
-			    var swipeSymbol = getSWipeSymbol(this);
+			    for(var event of events){
 
-			    console.log(swipeSymbol);
+			    	var target = event.target;
+			    	//クラス名に .drag を追加
+			    	$(target).addClass("drag");
+				    var swipeSymbol = getSWipeSymbol(event.target);
 
-			    if(!swipeSymbol){
-			    	return ;
-			    }
+				    if(!swipeSymbol){
+				    	continue ;
+				    }
 
-			    //要素内の相対座標を取得
-			    swipeData[swipeSymbol].dragOffset.x = event.pageX - this.offsetLeft;
-			    swipeData[swipeSymbol].dragOffset.y = event.pageY - this.offsetTop;
+				    //要素内の相対座標を取得
+				    swipeData[swipeSymbol].dragOffset.x = event.pageX - target.offsetLeft;
+				    swipeData[swipeSymbol].dragOffset.y = event.pageY - target.offsetTop;
 
-			    //swipeData[swipeSymbol].start.x = event.pageX ;
-			    //swipeData[swipeSymbol].start.y = event.pageY;
+				    //swipeData[swipeSymbol].start.x = event.pageX ;
+				    //swipeData[swipeSymbol].start.y = event.pageY;
 
-			    //ムーブイベントにコールバック
-			    if('ontouchstart' in window){
-			    	$(this).bind("touchmove", onTouchMove);
-			    	$(this).bind("touchend", onTouchEnd);
-			    	$(this).bind("touchleave", onTouchEnd);
+				    //ムーブイベントにコールバック
+				    if('ontouchstart' in window){
+				    	$(target).bind("touchmove", onTouchMove);
+				    	$(target).bind("touchend", onTouchEnd);
+				    	$(target).bind("touchleave", onTouchEnd);
 
-			    }else{
-			    	
-			    	$(this).on("mousemove", onTouchMove);
-			    	$(this).on("mouseup",  onTouchEnd);
-			    	$(this).on("mouseleave", onTouchEnd);
-			   	}
+				    }else{
+				    	
+				    	$(target).on("mousemove", onTouchMove);
+				    	$(target).on("mouseup",  onTouchEnd);
+				    	$(target).on("mouseleave", onTouchEnd);
+				   	}
 
 
-			    this.touched = true; // フラグを立てる
+				    target.touched = true; // フラグを立てる
+				}
 			}
 
 		  	function onTouchMove(e) {
-		    	// 開始していない場合は動かないようにする
-				// 過剰動作の防止
-				if (!this.touched) {
-					return;
-				}
-			    //ドラッグしている要素を取得
-			    //var drag = document.getElementsByClassName("drag")[0];
-			    var drag = this;
-
-				var swipeSymbol = getSWipeSymbol(this);
-
+		    	
 			    //同様にマウスとタッチの差異を吸収
 			    if(e.type === "mousemove") {
-			        var event = e;
+			        var events = [e];
 			    } else {
-			    	var event = getTouchEvent(e);
+			    	var events = getTouchEvents(e);
 			    }
-			    
-			    //フリックしたときに画面を動かさないようにデフォルト動作を抑制
-			    e.preventDefault();
 
-			    var padPosX = event.pageX - swipeData[swipeSymbol].dragOffset.x;
-			    var padPosY = event.pageY - swipeData[swipeSymbol].dragOffset.y;
-			    //マウスが動いた場所に要素を動かす
-			   	setPosition($(drag), padPosX, padPosY);
+			    for(var event of events){
 
-			   	var padOffsetX = padPosX - swipeData[swipeSymbol].start.x;
-			   	var padOffsetY = padPosY - swipeData[swipeSymbol].start.y;
-			   	sendPosition(swipeSymbol, padOffsetX, padOffsetY);
+				    var target = event.target;
+
+				    // 開始していない場合は動かないようにする
+					// 過剰動作の防止
+				
+					if (!target.touched) {
+						continue;
+					}
+
+					var swipeSymbol = getSWipeSymbol(event.target);
+				    
+				    //フリックしたときに画面を動かさないようにデフォルト動作を抑制
+				    e.preventDefault();
+
+				    var padPosX = event.pageX - swipeData[swipeSymbol].dragOffset.x;
+				    var padPosY = event.pageY - swipeData[swipeSymbol].dragOffset.y;
+				    //マウスが動いた場所に要素を動かす
+				   	setPosition($(target), padPosX, padPosY);
+
+				   	var padOffsetX = padPosX - swipeData[swipeSymbol].start.x;
+				   	var padOffsetY = padPosY - swipeData[swipeSymbol].start.y;
+				   	sendPosition(swipeSymbol, padOffsetX, padOffsetY);
+				}
 
 		  	}
 
 		  	function onTouchEnd(e) {
-		  		if (!this.touched) {
-					return;
-				}
-				// タッチ処理は終了したため、フラグをたたむ
-				this.touched = false;
 			   
 			    var drag = this;
 
 			     //同様にマウスとタッチの差異を吸収
 			    if(e.type === "mouseup" || e.type === "mouseleave") {
-			        var event = e;
+			        var events = [e];
 			    } else {
-			    	var event = getTouchEvent(e);	
+			    	var events = getTouchEvents(e);	
 			    }
 
-			    //ムーブベントハンドラの消去
-			    $(this).unbind("mousemove", onTouchMove);
-			    $(this).unbind("mouseup", onTouchEnd);
-			    $(this).unbind("mouseleave", onTouchEnd);
-			    $(this).unbind("touchmove", onTouchMove);
-			    $(this).unbind("touchend", onTouchEnd);
-			    $(this).unbind("touchleave", onTouchEnd);
+			    for(var event of events){
 
-				var swipeSymbol = getSWipeSymbol(this);
+			    	var target = event.target;
 
-			   	setPosition($(this), swipeData[swipeSymbol].start.x, swipeData[swipeSymbol].start.y);
-			   	sendPosition(swipeSymbol, 0, 0);
+			    	if (!target.touched) {
+						continue;
+					}
+				
+					// タッチ処理は終了したため、フラグをたたむ
+					target.touched = false;
+				    //ムーブベントハンドラの消去
+				    $(target).unbind("mousemove", onTouchMove);
+				    $(target).unbind("mouseup", onTouchEnd);
+				    $(target).unbind("mouseleave", onTouchEnd);
+				    $(target).unbind("touchmove", onTouchMove);
+				    $(target).unbind("touchend", onTouchEnd);
+				    $(target).unbind("touchleave", onTouchEnd);
 
-			    
-			    //クラス名 .drag も消す
-			    $(drag).removeClass("drag");
-			    	
+					var swipeSymbol = getSWipeSymbol(target);
+
+				   	setPosition($(target), swipeData[swipeSymbol].start.x, swipeData[swipeSymbol].start.y);
+				   	sendPosition(swipeSymbol, 0, 0);
+
+				    
+				    //クラス名 .drag も消す
+				    $(drag).removeClass("drag");
+				}
+				    	
 			}
 
-			function getTouchEvent(e) {
-				var originalEvent = e.originalEvent;
-				var event = originalEvent.changedTouches[0];
+			function getTouchEvents(e) {
 
-				return event;
+				var originalEvent = e.originalEvent;
+
+				return originalEvent.changedTouches;
+			
 			}
 
 			function getSWipeSymbol(dom){
