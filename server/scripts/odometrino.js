@@ -7,6 +7,7 @@
 	pin9 motor2 
 */
 function Odometrino(){
+	// super constructer
 	DroinoBase.apply(this, arguments);
 
 	var MOTOR_L1_PIN = 3;
@@ -15,48 +16,92 @@ function Odometrino(){
 	var MOTOR_R2_PIN = 9;
 	var LED1_PIN = 4;
 
+	var US_DISTANCE_TRIG_PIN = 2;
+	var US_DISTANCE_ECHO_PIN = 4;
+
 	var _this = this;
+
+	const MOVE_STATUS = "moveStatus";
+
+	var $logText = $("#log-text");
+	var $stopButton = $("#stop-button");
+	var $resetButton = $("#reset-button");
+	$stopButton.on("click", function(){
+		console.log("stop");
+		_this.props[MOVE_STATUS] = 5;
+	});
+
+	$resetButton.on("click", function(){
+		console.log("reset");
+		_this.props[MOVE_STATUS] = 1;
+	});
+
+	var motorRight = new Motor(this.arduino, {
+		pin1: MOTOR_R1_PIN,
+		pin2: MOTOR_R2_PIN
+	});
+
+	var motorLeft = new Motor(this.arduino, {
+		pin1: MOTOR_L1_PIN,
+		pin2: MOTOR_L2_PIN
+	});
+
+	var distanceSensor = new UltrasonicDistanceSensor(
+		this.arduino,
+		{
+			trigPin: US_DISTANCE_TRIG_PIN,
+			echoPin: US_DISTANCE_ECHO_PIN
+		});
 
 	// arduino functions
 	this.goStraight = function(){
 		console.log('goStraight');
-		this.arduino.digitalWrite(MOTOR_L1_PIN, Arduino.HIGH);
-		this.arduino.digitalWrite(MOTOR_L2_PIN, Arduino.LOW);
-		this.arduino.digitalWrite(MOTOR_R1_PIN, Arduino.HIGH);
-		this.arduino.digitalWrite(MOTOR_R2_PIN, Arduino.LOW);
+		motorRight.forward(255);
+		motorLeft.forward(255);
 	}
 
 	this.turnRight = function(){
 		console.log('turn right');
-		this.arduino.digitalWrite(MOTOR_L1_PIN, Arduino.HIGH);
-		this.arduino.digitalWrite(MOTOR_L2_PIN, Arduino.LOW);
-		this.arduino.digitalWrite(MOTOR_R1_PIN, Arduino.LOW);
-		this.arduino.digitalWrite(MOTOR_R2_PIN, Arduino.LOW);
+		motorRight.stop();
+		motorLeft.forward(255);
 	}
 
 	this.turnLeft = function(){
 		console.log('turn left');
-		this.arduino.digitalWrite(MOTOR_L1_PIN, Arduino.LOW);
-		this.arduino.digitalWrite(MOTOR_L2_PIN, Arduino.LOW);
-		this.arduino.digitalWrite(MOTOR_R1_PIN, Arduino.HIGH);
-		this.arduino.digitalWrite(MOTOR_R2_PIN, Arduino.LOW);
+		motorRight.forward(255);
+		motorLeft.stop();
 	}
 
+
 	//
-	const MOVE_STATUS = "moveStatus";
 
 	this.addProp(MOVE_STATUS);
 
 	this.setPropsChangeListener(function(){
+
 		if(_this.props[MOVE_STATUS] == 0){
+		
 			_this.turnRight();
 			_this.delayChangeProp(2000, MOVE_STATUS, 1);
+
+			distanceSensor.measure()
+				.then(function(distance){
+					$logText.append(distance + "<br>");
+
+				}).catch(function(){
+
+				});
+		
 		} else if(_this.props[MOVE_STATUS] == 1){
+		
 			_this.turnLeft();
 			_this.delayChangeProp(2000, MOVE_STATUS, 2);
+		
 		} else if(_this.props[MOVE_STATUS] == 2) {
+		
 			_this.goStraight();
 			_this.delayChangeProp(1000, MOVE_STATUS, 0);
+			
 		}
 	});
 

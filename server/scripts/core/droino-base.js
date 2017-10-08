@@ -39,7 +39,14 @@ function DroinoBase(){
 	};
 
 	this.delayChangeProp = function(time, propName, value){
+
+		var crtPropValue = this.props[propName];
+		
 		setTimeout(function(){
+
+			if(_this.props[propName] !== crtPropValue){
+				return;
+			}
 			_this.props[propName] = value;
 		}, time)
 	};

@@ -25,27 +25,29 @@
 	pin19 output input Analog servo 
 
 */
-
+"use strict";
 var Arduino = (function(){
 	
 	console.log('loads Arduino js class');
 
 	function Arduino(){
+		
 		this._isConnected = false;
 		this.isSimulation = false;
+		
 		if(typeof(nativeInterface) === 'undefined'){
-
+			
 			console.warn('Androino: Cannot work in the browser.');
 			this.nativeInterface = getDummyInterface();
 			this.isSimulation = true;
 
 		} else {
 			this.nativeInterface = nativeInterface;
-
 		}
 	}
 
-	// pin modes
+	// pin modes 
+	// #TODO symbol に変えたい firmata test のほうで修正必要
 	Arduino.INPUT = "INPUT";
 	Arduino.OUTPUT = "OUTPUT";
 	Arduino.PWM = "PWM";
@@ -55,6 +57,11 @@ var Arduino = (function(){
 	// pin outputs
 	Arduino.HIGH = "HIGH";
 	Arduino.LOW = "LOW";
+
+	Arduino._sysexFuncs = {};
+	Arduino._dummySendSysex = {};
+
+
 
 	// check connection
 	function preFirmataFunc(_this){
@@ -81,39 +88,55 @@ var Arduino = (function(){
 			this._isConnected = this.nativeInterface.disconnectArduino();
 			return this._isConnected;
 		},
-		pinMode: function(port, mode){
+		pinMode: function(pin, mode){
 			if(!preFirmataFunc(this))
 				return false;
-			this.nativeInterface.pinMode(port, mode);
+			this.nativeInterface.pinMode(pin, mode);
 		},
-		digitalWrite: function(port, value){
+		digitalWrite: function(pin, value){
 			if(!preFirmataFunc(this))
 				return false;
-			this.nativeInterface.digitalWrite(port, value);
+			this.nativeInterface.digitalWrite(pin, value);
 		},
-		digitalRead: function(port){
+		digitalRead: function(pin){
 			if(!preFirmataFunc(this))
 				return false;
-			return this.nativeInterface.digitalRead(port);
+			return this.nativeInterface.digitalRead(pin);
 		},
-		analogWrite: function(port, value){
+		analogWrite: function(pin, value){
 			if(!preFirmataFunc(this))
 				return false;
-			this.nativeInterface.analogWrite(port, value);
+			this.nativeInterface.analogWrite(pin, value);
 		},
-		analogRead: function(port){
+		analogRead: function(pin){
 			if(!preFirmataFunc(this))
 				return false;
 			
-			if(port > 13)
-				port -= 14;
+			if(pin > 13)
+				pin -= 14;
 
-			return this.nativeInterface.analogRead(port);
-		}, 
+			return this.nativeInterface.analogRead(pin);
+		},
+		/* extend command */
+		sendSysex: function(cmd, bytes){
+			this.nativeInterface.sendSysex(cmd, bytes);
+		},
+		setSysexListener: function(cmd, func){
+			Arduino._sysexFuncs[cmd] = func;
+		},
+		/* debug */
 		debugFunc: function(){
 			if(!preFirmataFunc(this))
 				return false;
 			this.nativeInterface.debugFunc();
+		},
+		appendDummyInterfaceFunc: function(name, func){
+
+			this.nativeInterface[name] = func;
+
+		},
+		appendDummySendSysex: function(cmd, func){
+			Arduino._dummySendSysex[cmd] = func;
 		}	
 	}
 	// #TODO visulal simulation ソフトウェア上でピンアサイン指定してシミュレーションしたい
@@ -125,20 +148,28 @@ var Arduino = (function(){
 			disconnectArduino: function(){
 				return false;
 			},
-			pinMode: function(port, mode){
+			pinMode: function(pin, mode){
 			},
-			digitalWrite: function(port, value){
-				console.log("dummy digitalWrite " + port + ": " + value);
+			digitalWrite: function(pin, value){
+				console.log("dummy digitalWrite " + pin + ": " + value);
 			},
-			digitalRead: function(port){
+			digitalRead: function(pin){
 				return Arduino.HIGH;
 			},
-			analogWrite: function(port, value){
-				console.log("dummy alongWrite " + port + ": " + value);
+			analogWrite: function(pin, value){
+				console.log("dummy alongWrite " + pin + ": " + value);
 			},
-			analogRead: function(port){
+			analogRead: function(pin){
 				return 123;
 			}, 
+			sendSysex: function(cmd, bytes){
+
+				if(Arduino._dummySendSysex[cmd]){
+
+					Arduino._dummySendSysex[cmd](bytes);
+
+				}
+			},
 			debugFunc: function(){
 			}	
 		}
@@ -152,6 +183,23 @@ var Arduino = (function(){
 		*/
 
 	// native 側から呼び出す関数郡
+	Arduino.getSysex = function(cmd, bytesJsonStr){
+		
+		if(!Arduino._sysexFuncs[cmd]){
+			console.warn("getSysex: sysex command whose listener not be set has called.");
+			console.log(bytesJsonStr);
+			return ;
+		}
+		
+		try {
+			var bytes = JSON.parse(bytesJsonStr);
+			Arduino._sysexFuncs[cmd](bytes);
+		} catch(err){
+			console.warn(err);
+			Arduino._sysexFuncs[cmd](null);	
+		}
+	}
+
 	Arduino.log = function(l){
 		console.log('%cnative log: %c' + l, 'color:blue', '');
 	}
