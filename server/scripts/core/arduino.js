@@ -137,10 +137,18 @@ var Arduino = (function(){
 		setSysexListener: function(cmd, func){
 			Arduino._sysexFuncs[cmd] = func;
 		},
+		sendString: function(str){ // マルチバイトは?
+			var bytes = [];
+			for(var l of str){
+				bytes.push(l.charCodeAt());
+			}
+			sendSysex(Arduino.SYSEX_STRING_CMD, bytes);
+		},
 		/* debug */
 		debugFunc: function(){
 			if(!preFirmataFunc(this))
 				return false;
+			this.sendString("str_test");
 			this.nativeInterface.debugFunc();
 		},
 		appendDummyInterfaceFunc: function(name, func){
