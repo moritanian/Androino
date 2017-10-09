@@ -66,3 +66,18 @@ button.pin-input-btn.output-low {
 	background-color: #cfe2ff;
 
 }
+
+#sysex-container {
+	list-style: none;
+    padding: 0;
+}
+
+.string-send-button {
+	background-color: #4a0a0a;
+    color: white;
+    height: 30px;
+}
+
+.sysex-str-input {
+	height: 30px;
+}
