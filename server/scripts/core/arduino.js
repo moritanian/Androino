@@ -142,7 +142,7 @@ var Arduino = (function(){
 			for(var l of str){
 				bytes.push(l.charCodeAt());
 			}
-			sendSysex(Arduino.SYSEX_STRING_CMD, bytes);
+			this.sendSysex(Arduino.SYSEX_STRING_CMD, bytes);
 		},
 		/* debug */
 		debugFunc: function(){
