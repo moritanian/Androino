@@ -59,6 +59,7 @@ var Arduino = (function(){
 	Arduino.LOW = "LOW";
 
 	Arduino.SYSEX_STRING_CMD = 0x71;
+	Arduino.PROTOCOL_VERSION_CMD = 0xF9;
 	Arduino.SYSEX_FIRMWARE_VERSION_CMD = 0x79;
 
 	Arduino._sysexFuncs = {};
@@ -71,6 +72,12 @@ var Arduino = (function(){
 		= function(bytes){
 			console.log("sysex firmware cmd: " + bytes.toString());
 		};
+
+	Arduino._sysexFuncs[Arduino.PROTOCOL_VERSION_CMD]
+		= function(bytes){
+			console.log("protocol cmd: " + bytes.toString());
+		};
+
 
 	Arduino._dummySendSysex = {};
 
