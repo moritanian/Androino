@@ -16,8 +16,8 @@ function Odometrino(){
 	var MOTOR_R2_PIN = 9;
 	var LED1_PIN = 4;
 
-	var US_DISTANCE_TRIG_PIN = 2;
-	var US_DISTANCE_ECHO_PIN = 4;
+	var US_DISTANCE_TRIG_PIN = 7;
+	var US_DISTANCE_ECHO_PIN = 2;
 
 	var _this = this;
 
