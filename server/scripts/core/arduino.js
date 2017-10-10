@@ -89,15 +89,16 @@ var Arduino = (function(){
 	function preFirmataFunc(_this){
 	
 		
-
-		if(!_this._isConnected){
-			/* 
+	/* 
 			connect() をpromiseにしたのでひとまずコメントアウト
+		if(!_this._isConnected){
+		
 			if(!_this.connect())
-		*/
-			
+		
+
 				return false;
 		}
+		*/
 
 		return true;
 	}
