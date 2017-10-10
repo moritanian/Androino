@@ -197,8 +197,8 @@ $(function(){
                 .then(function(distance){
                     console.log(distance);
 
-                }).catch(function(){
-
+                }).catch(function(bytes){
+                    console.warn(bytes);
                 });
             }
         }

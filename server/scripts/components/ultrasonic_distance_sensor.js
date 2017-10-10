@@ -35,8 +35,8 @@ UltrasonicDistanceSensor.prototype.measure = function(){
 		_this.arduino.setSysexListener(
 			UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_RESULT_COMMAND, 
 			function(bytes){
-				if(!bytes || bytes.length != 3){
-					reject();
+				if(!bytes || bytes.length != 6){
+					reject(bytes);
 					return;
 				}
 

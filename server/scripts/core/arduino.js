@@ -65,7 +65,7 @@ var Arduino = (function(){
 	Arduino._sysexFuncs = {};
 	Arduino._sysexFuncs[Arduino.SYSEX_STRING_CMD]
 		= function(bytes){
-			var str = decodeByteStream(bytes);
+			var str = Arduino.decodeByteStreamString(bytes);
 			console.log("sysex string : " + str);
 		};
 	Arduino._sysexFuncs[Arduino.SYSEX_FIRMWARE_VERSION_CMD]
@@ -103,7 +103,7 @@ var Arduino = (function(){
 		return true;
 	}
 
-	function encodeByteStream(str){
+	Arduino.encodeByteStreamString = function(str){
 		var bytes = [], b;
 		for(var c of str){
 			b = c.charCodeAt();
@@ -113,13 +113,22 @@ var Arduino = (function(){
 		return bytes;
 	}
 
-	function decodeByteStream(bytes){
+	Arduino.decodeByteStreamString = function(bytes){
 		var str = "", b; 
 		for(var index = 0; index < bytes.length;  index+=2){
 			b = ((bytes[index + 1] << 7) & 0x80) | (bytes[index] & 0x7f)
 			str += String.fromCharCode(b);
 		}
 		return str;
+	}
+	
+	Arduino.decodeByteStream = function(bytes){
+		var db = []; 
+		for(var index = 0; index < bytes.length;  index+=2){
+			var b = ((bytes[index + 1] << 7) & 0x80) | (bytes[index] & 0x7f)
+			db.push(b);
+		}
+		return db;
 	}
 
 	Arduino.prototype = {
@@ -195,7 +204,7 @@ var Arduino = (function(){
 			Arduino._sysexFuncs[cmd] = func;
 		},
 		sendString: function(str){ // #TODO マルチバイトは?
-			var bytes = encodeByteStream(str);
+			var bytes = Arduino.encodeByteStreamString(str);
 			this.sendSysex(Arduino.SYSEX_STRING_CMD, bytes);
 		},
 		/* debug */
