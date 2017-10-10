@@ -32,7 +32,7 @@ Led.prototype.on = function(){
 	
 }
 
-led.prototype.off = function(){
+Led.prototype.off = function(){
 	
 	if(this.pinMode != Arduino.OUTPUT){
 
@@ -48,7 +48,7 @@ led.prototype.off = function(){
 	
 }
 
-led.prototype.toggle = function(){
+Led.prototype.toggle = function(){
 
 	if(this.isOn()){
 
@@ -62,14 +62,14 @@ led.prototype.toggle = function(){
 
 }
 
-led.prototype.isOn = function(){
+Led.prototype.isOn = function(){
 
 	return this.pinMode === Arduino.OUTPUT 
 		&& (this.level === Arduino.HIGH) == this.logic;
 
 }
 
-led.prototype.brightness = function(value){
+Led.prototype.brightness = function(value){
 
 	if(this.pinMode != Arduino.PWM){
 

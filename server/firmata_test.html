@@ -6,12 +6,25 @@
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script type="text/javascript" src="./scripts/libs/vue.js"></script>
 <script type="text/javascript" src="./scripts/core/arduino.js"></script>
+<script type="text/javascript" src="./scripts/components/ultrasonic_distance_sensor.js"></script>
+
 
 <script type="text/javascript">
 'use strict';
 $(function(){
      
     var arduino = new Arduino();
+
+    var US_DISTANCE_TRIG_PIN = 7;
+    var US_DISTANCE_ECHO_PIN = 2;
+    var distanceSensor = new UltrasonicDistanceSensor(
+        arduino,
+        {
+            trigPin: US_DISTANCE_TRIG_PIN,
+            echoPin: US_DISTANCE_ECHO_PIN
+        }
+    );
+
 
     var arduinoPins = [
         {name: 'pin2', pinNo:2, modes:[Arduino.INPUT, Arduino.OUTPUT, Arduino.SERVO], defaultMode: Arduino.OUTPUT},
@@ -170,10 +183,33 @@ $(function(){
         }
     };
 
+    var sysexCmdComponent = {
+        template: `
+            <li>
+                <button 
+                    v-on:click="onClickSysexCmd"
+                    class="sysex-cmd-button"
+                    >send sysex cmd</button>
+            </li>`,
+        methods: {
+            onClickSysexCmd: function(){
+                distanceSensor.measure()
+                .then(function(distance){
+                    console.log(distance);
+
+                }).catch(function(){
+
+                });
+            }
+        }
+    };
+
+
      var sysex = new Vue({
         el: '#sysex-container',
         components: {
-            'sysexStringComponent': sysexStringComponent
+           'sysexStringComponent': sysexStringComponent,
+            'sysexCmdComponent': sysexCmdComponent
         } 
     });
        
@@ -198,7 +234,12 @@ $(function(){
         </ul>
 
         <ul id="sysex-container">
-            <sysex-string-component/>
+            <sysex-string-component > 
+            </sysex-string-component>
+
+            <sysex-cmd-component
+                class="sysex-cmd-component">        
+            </sysex-cmd-component>
         </ul>
 
     </div>

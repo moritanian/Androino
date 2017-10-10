@@ -80,14 +80,22 @@ var Arduino = (function(){
 
 
 	Arduino._dummySendSysex = {};
-
-
+	// 送信するとechoされる(dummy)
+	Arduino._dummySendSysex[Arduino.SYSEX_STRING_CMD] = function(bytes){
+		Arduino._sysexFuncs[Arduino.SYSEX_STRING_CMD](bytes); 
+	};
 
 	// check connection
 	function preFirmataFunc(_this){
 	
+		
+
 		if(!_this._isConnected){
+			/* 
+			connect() をpromiseにしたのでひとまずコメントアウト
 			if(!_this.connect())
+		*/
+			
 				return false;
 		}
 
@@ -118,8 +126,30 @@ var Arduino = (function(){
 			return this._isConnected;
 		},
 		connect: function(){
-			this._isConnected = this.nativeInterface.connectArduino();
-			return this.isConnected;
+
+			var _this = this;
+
+			function tryConnect(resolve, reject){
+				
+				_this._isConnected = _this.nativeInterface.connectArduino();
+
+				if(_this._isConnected){
+
+					resolve();
+
+				} else {
+
+					setTimeout(function(){
+						tryConnect(resolve, reject);
+					}, 1000);
+
+				}
+			}
+
+			return new Promise(function(resolve, reject){
+				tryConnect(resolve, reject);
+			});
+
 		},
 		disconnect: function(){
 			if(!preFirmataFunc(this))
@@ -231,6 +261,7 @@ var Arduino = (function(){
 		
 		if(!Arduino._sysexFuncs[cmd]){
 			console.warn("getSysex: sysex command whose listener not be set has called.");
+			console.log(cmd);
 			console.log(bytesJsonStr);
 			return ;
 		}
