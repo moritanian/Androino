@@ -40,7 +40,9 @@ UltrasonicDistanceSensor.prototype.measure = function(){
 					return;
 				}
 
-				var distance = (bytes[0] << 14) + (bytes[1] << 7) + (bytes[2]);
+				var db = Arduino.decodeByteStream(bytes);
+
+				var distance = (db[0] << 16) + (db[1] << 8) + (db[2]);
 				distance /= 100.0; // [mm]
 
 				return resolve(distance);	
