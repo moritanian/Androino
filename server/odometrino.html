@@ -18,9 +18,34 @@
 		overflow: scroll;
 	}
 
+	button {
+		width: 160px;
+		height: 30px;
+		font-size: 20px;
+	}
+
+	.orientation-title{
+		background-color: #c50000;
+	    color: whitesmoke;
+	}
+
+	.orientation-text {
+		width: 70px;
+		height: 30px;
+		background-color: #e6e6e6;
+		text-align: center;
+	}
+
+	
+
 </style>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+
+<script type="text/javascript" src="./scripts/libs/jsfeat-min.js"></script>
+<script type="text/javascript" src="./scripts/libs/math.min.js"></script>
+<script type="text/javascript" src="./scripts/libs/math-extension.js"></script>
+
 <script type="text/javascript" src="./scripts/core/arduino.js"></script>
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
 <script type="text/javascript" src="./scripts/core/droino-util.js"></script>
@@ -47,10 +72,26 @@ $(function(){
 		this is map space
 	</div>
 
-	<div class="controller-constainer">
-		<button id="reset-button"> reset</button>
-		<button id="stop-button"> stop </button>
-	</div>
+	<table class="controller-constainer">
+		<tr>
+			<td>
+				<button id="reset-button"> reset</button>
+			</td>
+			<td>
+				<button id="stop-button"> stop </button>
+			</td>
+			<td>
+				<button id="rotate-button"> rotate </button>
+			</td>
+
+			<td id="" class="orientation-title"> orientation </td>
+			<td id="orientation-alpha" class="orientation-text">0.0</td>
+			<td id="orientation-beta" class="orientation-text">0.0</td>
+			<td id="orientation-gamma" class="orientation-text">0.0</td>
+			<td id="orientation-rot" class="orientation-text">0.0</td>
+			<td id="orientation-sum" class="orientation-text">0.0</td>
+		</tr>
+	</table>
 
 	<div class="log-container">
 		<div class="log-text" id="log-text"></div>

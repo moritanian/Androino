@@ -1,64 +1,79 @@
-function Motor(arduino, opts){
+var Motor = (function(){
 
-	this.pin1 = opts.pin1;
+	var maxValue = 255;
 
-	this.pin2 = opts.pin2;
+	function Motor(arduino, opts){
 
-	this.arduino = arduino;
+		this.pin1 = opts.pin1;
 
-	this.arduino.pinMode(this.pin1, Arduino.PWM);
+		this.pin2 = opts.pin2;
 
-	this.arduino.pinMode(this.pin2, Arduino.PWM);
+		this.arduino = arduino;
 
-	this.maxValue = opts.maxValue || 255;
-}
+		this.arduino.pinMode(this.pin1, Arduino.PWM);
 
-Motor.prototype.forward = function(value){
+		this.arduino.pinMode(this.pin2, Arduino.PWM);
 
-	this.arduino.analogWrite(this.pin1, value);
+		maxValue = opts.maxValue || maxValue;
+	}
 
-	this.arduino.analogWrite(this.pin2, 0);
+	Motor.prototype.forward = function(value = maxValue){
 
-}
+		value = validateAnalogValue(value);
 
-Motor.prototype.backward = function(value){
+		this.arduino.analogWrite(this.pin1, value);
 
-	this.arduino.analogWrite(this.pin2, value);
-
-	this.arduino.analogWrite(this.pin1, 0);
-
-}
-
-Motor.prototype.stop = function(){
-
-	this.arduino.analogWrite(this.pin1, 0);
-
-	this.arduino.analogWrite(this.pin2, 0);
-
-}
-
-Motor.prototype.brake = function(){
-
-	this.arduino.analogWrite(this.pin1, this.maxValue);
-
-	this.arduino.analogWrite(this.pin2, this.maxValue);
-
-}
-
-Motor.prototype.speed = function(value){
-
-	if(speed > 0){
-
-		this.forward(value);
-
-	} else if(speed == 0){
-
-		this.stop();
-
-	} else {
-
-		this.backward(value);
+		this.arduino.analogWrite(this.pin2, 0);
 
 	}
 
-}
+	Motor.prototype.backward = function(value = maxValue){
+
+		value = validateAnalogValue(value);
+
+		this.arduino.analogWrite(this.pin2, value);
+
+		this.arduino.analogWrite(this.pin1, 0);
+
+	}
+
+	Motor.prototype.stop = function(){
+
+		this.arduino.analogWrite(this.pin1, 0);
+
+		this.arduino.analogWrite(this.pin2, 0);
+
+	}
+
+	Motor.prototype.brake = function(){
+
+		this.arduino.analogWrite(this.pin1, this.maxValue);
+
+		this.arduino.analogWrite(this.pin2, this.maxValue);
+
+	}
+
+	Motor.prototype.speed = function(value = 0){
+
+		if(value > 0){
+
+			this.forward(value);
+
+		} else if(value == 0){
+
+			this.stop();
+
+		} else {
+
+			this.backward(value);
+
+		}
+
+	}
+
+	function validateAnalogValue(value){
+		return Math.min(Math.max(value, 0), maxValue);
+	}
+
+	return Motor;
+})();

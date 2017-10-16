@@ -26,6 +26,7 @@ function Odometrino(){
 	var $logText = $("#log-text");
 	var $stopButton = $("#stop-button");
 	var $resetButton = $("#reset-button");
+	var $rotateButton = $("#rotate-button");
 	$stopButton.on("click", function(){
 		console.log("stop");
 		_this.props[MOVE_STATUS] = 5;
@@ -34,6 +35,12 @@ function Odometrino(){
 	$resetButton.on("click", function(){
 		console.log("reset");
 		_this.props[MOVE_STATUS] = 1;
+	});
+
+	$rotateButton.on("click", function(){
+		console.log("rotate");
+		_this.props[MOVE_STATUS] = 5;
+		_this.rotateDeg(90);
 	});
 
 	var motorRight = new Motor(this.arduino, {
@@ -72,8 +79,18 @@ function Odometrino(){
 		motorLeft.stop();
 	}
 
+	this.rotate = function(sp){
+		motorRight.speed(-sp);
+		motorLeft.speed(sp);
+	}
+	this.stop = function(){
+		motorRight.stop();
+		motorLeft.stop();
+	}
+
 
 	//
+	this.androidService.initOrientationListener();
 
 	this.addProp(MOVE_STATUS);
 
@@ -88,8 +105,8 @@ function Odometrino(){
 				.then(function(distance){
 					$logText.append(distance + "<br>");
 
-				}).catch(function(){
-
+				}).catch(function(e){
+					console.warn(e);
 				});
 		
 		} else if(_this.props[MOVE_STATUS] == 1){
@@ -107,6 +124,61 @@ function Odometrino(){
 
 	this.props[MOVE_STATUS] = 0;
 	
+	var $alphaText =  $("#orientation-alpha");
+	var $betaText =  $("#orientation-beta");
+	var $gammaText =  $("#orientation-gamma");
+	var $rotText =  $("#orientation-rot");
+	var $sumRotText =  $("#orientation-sum");
+
+	this.rotateDeg = function(deg){
+		this.rotateRad(Util.degToRad(deg));
+	}
+
+	this.rotateRad = function(rotation){
+		var ROTATE_SPEED_COEFF = 10;
+		var ALLOW_RAD_SPAN = Util.degToRad(5.0); // 誤差許容角度
+	
+		var destSumRotation = this.androidService.getSumRotation2D() + rotation;
+
+		return new Promise(function(resolve, reject){
+
+			var rotationCallback = function(event){
+
+				var crtOrientation = event.deviceOrientation;
+
+				$alphaText.text(crtOrientation.alpha.toFixed(2));
+				$betaText.text(crtOrientation.beta.toFixed(2));
+				$gammaText.text(crtOrientation.gamma.toFixed(2));
+
+				var diffRad = destSumRotation - _this.androidService.getSumRotation2D();
+
+				$rotText.text(_this.androidService.getRotation2D().toFixed(2));
+				$sumRotText.text(_this.androidService.getSumRotation2D().toFixed(2));
+
+	
+				console.log("diffRad = " + diffRad);
+
+				if(Math.abs(diffRad) < ALLOW_RAD_SPAN ){
+					
+					_this.stop();
+
+					//_this.androidService.removeDeviceOrientationListener(rotationCallback);
+
+					resolve();
+
+					return;		
+				}
+
+				// #TODO 制御
+				_this.rotate(diffRad * ROTATE_SPEED_COEFF);
+
+			}
+
+			_this.androidService.addDeviceOrientationListener(rotationCallback);
+
+		}) ;
+	}
+
 	
 }
 

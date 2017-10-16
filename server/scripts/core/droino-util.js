@@ -81,3 +81,27 @@ Object.assign( EventDispatcher.prototype, {
 	}
 
 } );
+
+var Util = {};
+
+Util.degToRad = function(deg){
+	return deg * Math.PI / 180.0;
+}
+
+Util.trimmean = function(arr, range){
+	
+	var mean = math.mean(arr);
+
+	var inrangesSum = 0;
+	var inrangesNum = 0;
+
+	for(d of arr){
+		if(Math.abs(d - mean) < range){
+			inrangesSum += d;
+			inrangesNum ++;
+		}
+	}
+
+	return inrangesSum / inrangesNum;
+	
+}

@@ -6,13 +6,16 @@ function UltrasonicDistanceSensor(arduino, opts){
 
 	this.echoPin = opts.echoPin;
 
+	// dummy func
 	if(this.arduino.isSimulation){
 		this.arduino.appendDummySendSysex(
 			UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_REQUEST_COMMAND,
 			function(){
-				var distance = 2000; // [10um]
+				var distance = 2000 + Math.random() * 200; // [10um]
 				var result 
-					= [(distance >> 14) & 0x7f, (distance >> 7) & 0x7f, distance & 0x7f];
+					= Arduino.encodeByteStream(
+						[(distance >> 16) & 0xff, (distance >> 8) & 0xff, distance & 0xff]
+					);
 					
 				Arduino.getSysex(UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_RESULT_COMMAND,
 					JSON.stringify(result));
@@ -25,7 +28,7 @@ function UltrasonicDistanceSensor(arduino, opts){
 UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_REQUEST_COMMAND = 0B00100000;
 UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_RESULT_COMMAND = 0B00100001;
 
-UltrasonicDistanceSensor.prototype.measure = function(){
+UltrasonicDistanceSensor.prototype.measureLow = function(){
 
 	var _this = this;
 
@@ -53,6 +56,46 @@ UltrasonicDistanceSensor.prototype.measure = function(){
 			UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_REQUEST_COMMAND,
 			[_this.trigPin, _this.echoPin]
 			);
+
+	});
+}
+
+//
+UltrasonicDistanceSensor.prototype.measure = function(execCount = 10, trimmeanRange = 50.0){
+
+	var _this = this;
+
+	var timeSpan = 60; 
+	var lows = [];
+
+	var count = 0;
+
+	return new Promise(function(resolve, reject){
+
+		var measureFunc = function(){
+
+			_this.measureLow().then(function(distance){
+				
+				lows.push(distance);
+				
+				if(lows.length == execCount){
+					resolve(Util.trimmean(lows, trimmeanRange));
+				}
+
+			}).catch(function(e){
+				reject(e);
+			});
+
+			count ++;
+			if(count < execCount){
+				
+				setTimeout(measureFunc, timeSpan);
+
+			}
+
+		}
+
+		measureFunc();
 
 	});
 }

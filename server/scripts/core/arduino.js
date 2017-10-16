@@ -121,6 +121,16 @@ var Arduino = (function(){
 		}
 		return str;
 	}
+
+	Arduino.encodeByteStream = function(bytes){
+		var db = [];
+		for(var b of bytes){
+			db.push(b & 0x7f);
+			db.push((b >> 7) & 1);
+		}
+		return db;
+	}
+
 	
 	Arduino.decodeByteStream = function(bytes){
 		var db = []; 
