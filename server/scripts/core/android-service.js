@@ -4,13 +4,22 @@ function AndroidService(){
 
 	/*
 		camera系
+		#TODO 画像処理
+			- マーカーを追う
+			- 
 	*/
-
 	var camController, video;
 
-	this.initDeviceCamera = function(){
-		video = document.createElement('video');
+	this.initDeviceCamera = function(_video){
+		
+		if(!_video){
+			video = document.createElement('video');
+		} else {
+			video = _video;
+		}
+		
 		video.autoplay = 'autoplay';
+
 		camController = new camera_controller(video);
 	};
 
@@ -40,28 +49,65 @@ function AndroidService(){
 	};
 
 	/*
-		device orientation 系	
-		使う場合は必ず最初に initOrientationListener する
+		device motion 系	
+		使う場合は必ず最初に initIMUListener する
 
 		Copyright © 2015 lamplightdev. All rights reserved.
 		https://github.com/lamplightdev/compass
 	    
 	*/
 
-	(function orientationService(){
+	(function IMUService(){
 
 		var deviceOrientation = {alpha: 0.0, beta: 0.0, gamma:0.0};
 		var screenOrientation = 0;
-		var orientationDispatcher = new EventDispatcher();
+		var IMUDispatcher = new EventDispatcher();
+		var DEVICE_MOTION_EVENT = "DEVICE_MOTION_EVENT";
+		var DEVICE_PROXIMITY_EVENT = "DEVICE_MOTION_EVENT";
 		var DEVICE_ORIENTATION_EVENT = "DEVICE_ORIENTATION_EVENT";
 		var SCREEN_ORIENTATION_EVENT = "SCREEN_ORIENTATION_EVENT";
 
+		// motion
+		var motionData = {
+			acc: {x: 0.0, y: 0.0, z: 0.0},
+			vel: {x: 0.0, y: 0.0, z: 0.0},
+			pos: {x: 0.0, y: 0.0, z: 0.0}
+		}
+
+		// proximity;
+		proximity = 0.0;
+
+		// rotation 
 		var lastRotation2d = 0;
 		var rotation2D = 0;
 		var sumRotation2dUnit = 0; // +PI -PI 超えるごとに増減
 		var sumRotation2d = 0; 
 
 		var defaultOrientation = screen.width > screen.height ? "landscape" : "portrait";
+
+		var onDeviceMotionChangeEvent = function( event){
+
+			motionData.acc.x = event.acceleration.x;
+			motionData.acc.y = event.acceleration.y;
+			motionData.acc.z = event.acceleration.z;
+
+			IMUDispatcher.dispatchEvent({
+				type: DEVICE_MOTION_EVENT,
+				motionData: motionData
+			});
+
+		};
+
+		var onDeviceProximityChangeEvent = function( event){
+
+			proximity = event.value;
+
+			IMUDispatcher.dispatchEvent({
+				type: DEVICE_PROXIMITY_EVENT,
+				proximity: proximity
+			});
+
+		};
 
 		var onDeviceOrientationChangeEvent = function( event ) {
 
@@ -133,7 +179,7 @@ function AndroidService(){
 
 			}
 
-			orientationDispatcher.dispatchEvent({
+			IMUDispatcher.dispatchEvent({
 				type: DEVICE_ORIENTATION_EVENT,
 				deviceOrientation: deviceOrientation
 			});
@@ -144,7 +190,7 @@ function AndroidService(){
 
 	    	screenOrientation = window.orientation || 0;
 
-			orientationDispatcher.dispatchEvent({
+			IMUDispatcher.dispatchEvent({
 				type: SCREEN_ORIENTATION_EVENT,
 				screenOrientation: screenOrientation
 			});
@@ -184,40 +230,75 @@ function AndroidService(){
 			return orientation;
 		}
 
+		this.addDeviceMotionListener = function(func){
+			
+			IMUDispatcher.addEventListener(DEVICE_MOTION_EVENT, func);
+
+		};
+
+		this.removeDeviceMotionListener = function(func){
+			
+			IMUDispatcher.removeEventListener(DEVICE_MOTION_EVENT, func);
+
+		};
+
+		this.addDeviceProximityListener = function(func){
+			
+			IMUDispatcher.addEventListener(DEVICE_PROXIMITY_EVENT, func);
+
+		};
+
+		this.removeDeviceProximityListener = function(func){
+			
+			IMUDispatcher.removeEventListener(DEVICE_PROXIMITY_EVENT, func);
+
+		};
+
+
+
 
 		this.addScreenOrientationListener = function(func){
 			
-			orientationDispatcher.addEventListener(SCREEN_ORIENTATION_EVENT, func);
+			IMUDispatcher.addEventListener(SCREEN_ORIENTATION_EVENT, func);
 
 		};
 
 		this.removeScreenOrientationListener = function(func){
 			
-			orientationDispatcher.removeEventListener(SCREEN_ORIENTATION_EVENT, func);
+			IMUDispatcher.removeEventListener(SCREEN_ORIENTATION_EVENT, func);
 
 		};
 
 		this.addDeviceOrientationListener = function(func){
 			
-			orientationDispatcher.addEventListener(DEVICE_ORIENTATION_EVENT, func);
+			IMUDispatcher.addEventListener(DEVICE_ORIENTATION_EVENT, func);
 
 		};
 
 		this.removeDeviceOrientationListener = function(func){
 			
-			orientationDispatcher.removeEventListener(DEVICE_ORIENTATION_EVENT, func);
+			IMUDispatcher.removeEventListener(DEVICE_ORIENTATION_EVENT, func);
 
 		};
 
-		this.initOrientationListener = function(){
-			
+		this.initIMUListener = function(){
+
+			window.addEventListener( 'devicemotion', onDeviceMotionChangeEvent, false );
 			window.addEventListener( 'orientationchange', onScreenOrientationChangeEvent, false );
 			window.addEventListener( 'deviceorientation', onDeviceOrientationChangeEvent, false );
+
+			// 
+			window.addEventListener("deviceproximity", onDeviceProximityChangeEvent);
+
 
 		};
 
 		this.getDeviceOrientation = function(){
 			return deviceOrientation;
+		};
+
+		this.getDeviceProximity = function(){
+			return proximity;
 		};
 
 		this.getScreenOrientation = function(){

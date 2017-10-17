@@ -232,7 +232,8 @@ var Arduino = (function(){
 		appendDummySendSysex: function(cmd, func){
 			Arduino._dummySendSysex[cmd] = func;
 		}	
-	}
+	};
+
 	// #TODO visulal simulation ソフトウェア上でピンアサイン指定してシミュレーションしたい
 	function getDummyInterface() {
 		return {
@@ -266,7 +267,7 @@ var Arduino = (function(){
 			},
 			debugFunc: function(){
 			}	
-		}
+		};
 	}
 
 	
@@ -293,19 +294,39 @@ var Arduino = (function(){
 			console.warn(err);
 			Arduino._sysexFuncs[cmd](null);	
 		}
-	}
+	};
 
 	Arduino.log = function(l){
 		console.log('%cnative log: %c' + l, 'color:blue', '');
-	}
+	};
 
 	Arduino.logWarn = function(l){
 		console.warn('%cnative logWarn: %c ' + l, 'color:blue', '');
-	}
+	};
 
 	Arduino.logError = function(l){
 		console.error('%cnative logError: %c' + l, 'color:blue', '');
-	}
+	};
+
+	Arduino.onSensorChanged = function(eventName){
+		switch(eventName){
+			case "proximity":
+				
+				if(arguments.length < 2){
+					console.warn("onSensorChanged: " 
+						+ eventName 
+						+ "arguments length is too short: " 
+						+ arguments.length);
+
+					break;
+				}
+
+				var event = new Event("deviceproximity");
+				event.value = arguments[1];
+				window.dispatchEvent(event);
+				break;
+		}
+	};
 
 	return Arduino;
 
