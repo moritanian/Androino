@@ -63,7 +63,7 @@ function AndroidService(){
 		var screenOrientation = 0;
 		var IMUDispatcher = new EventDispatcher();
 		var DEVICE_MOTION_EVENT = "DEVICE_MOTION_EVENT";
-		var DEVICE_PROXIMITY_EVENT = "DEVICE_MOTION_EVENT";
+		var DEVICE_PROXIMITY_EVENT = "DEVICE_PROXIMITY_EVENT";
 		var DEVICE_ORIENTATION_EVENT = "DEVICE_ORIENTATION_EVENT";
 		var SCREEN_ORIENTATION_EVENT = "SCREEN_ORIENTATION_EVENT";
 
@@ -101,7 +101,7 @@ function AndroidService(){
 		var onDeviceProximityChangeEvent = function( event){
 
 			proximity = event.value;
-
+			
 			IMUDispatcher.dispatchEvent({
 				type: DEVICE_PROXIMITY_EVENT,
 				proximity: proximity
@@ -171,10 +171,10 @@ function AndroidService(){
 
 				sumRotation2d = rotation2D + sumRotation2dUnit * 2.0 * Math.PI;
 				lastRotation2d = rotation2D;
-
+/*
 				console.log("rot " + rotation2D);
 				console.log("sum " + sumRotation2d);
-
+*/
 
 
 			}
@@ -288,7 +288,7 @@ function AndroidService(){
 			window.addEventListener( 'deviceorientation', onDeviceOrientationChangeEvent, false );
 
 			// 
-			window.addEventListener("deviceproximity", onDeviceProximityChangeEvent);
+			window.addEventListener("deviceproximity", onDeviceProximityChangeEvent, false);
 
 
 		};

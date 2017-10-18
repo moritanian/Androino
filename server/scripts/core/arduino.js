@@ -308,26 +308,6 @@ var Arduino = (function(){
 		console.error('%cnative logError: %c' + l, 'color:blue', '');
 	};
 
-	Arduino.onSensorChanged = function(eventName){
-		switch(eventName){
-			case "proximity":
-				
-				if(arguments.length < 2){
-					console.warn("onSensorChanged: " 
-						+ eventName 
-						+ "arguments length is too short: " 
-						+ arguments.length);
-
-					break;
-				}
-
-				var event = new Event("deviceproximity");
-				event.value = arguments[1];
-				window.dispatchEvent(event);
-				break;
-		}
-	};
-
 	return Arduino;
 
 })();

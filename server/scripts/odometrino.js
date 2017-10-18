@@ -27,6 +27,7 @@ function Odometrino(){
 	var $stopButton = $("#stop-button");
 	var $resetButton = $("#reset-button");
 	var $proximityButton = $("#proximity-button");
+	var $proximityText = $("#proximity-value");
 	var $rotateButton = $("#rotate-button");
 	$stopButton.on("click", function(){
 		console.log("stop");
@@ -42,7 +43,7 @@ function Odometrino(){
 		console.log("proximity");
 		_this.props[MOVE_STATUS] = 5;
 		_this.androidService.addDeviceProximityListener(function(event){
-			$logText.append("proximity: " + event.proximity + "<br>");
+			$proximityText.text(event.proximity);
 		});
 	});
 
