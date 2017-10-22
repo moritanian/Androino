@@ -90,13 +90,13 @@ Util.degToRad = function(deg){
 
 Util.trimmean = function(arr, range){
 	
-	var mean = math.mean(arr);
+	var median = Util.median(arr);
 
 	var inrangesSum = 0;
 	var inrangesNum = 0;
 
 	for(d of arr){
-		if(Math.abs(d - mean) < range){
+		if(Math.abs(d - median) < range){
 			inrangesSum += d;
 			inrangesNum ++;
 		}
@@ -105,3 +105,58 @@ Util.trimmean = function(arr, range){
 	return inrangesSum / inrangesNum;
 	
 }
+
+Util.median = (function(){
+	var cmp_numeric = function(a, b) { return (a < b); };
+
+	function median(arr){
+		var len = arr.length;
+		jsfeat.math.qsort(arr, 0, arr.length-1, cmp_numeric);
+		var m;
+
+		if(len % 2 == 0){
+			m = (arr[len/2-1] + arr[len/2])/ 2.0; 
+		} else {
+			m = arr[(len-1)/2];
+		}
+		return m;
+	}
+	return median;
+})();
+
+Util.stopwatch = (function() {
+    function stopwatch() {
+        this.start_time = 0;
+        this.stop_time = 0;
+        this.run_time = 0;
+        this.running = false;
+    }
+
+    stopwatch.prototype.start = function() {
+        this.start_time = new Date().getTime();
+        this.running = true;
+    }
+
+    stopwatch.prototype.stop = function() {
+        this.stop_time = new Date().getTime();
+        this.run_time = (this.stop_time - this.start_time);
+        this.running = false;
+    }
+
+    stopwatch.prototype.get_runtime = function() {
+        return this.run_time;
+    }
+
+     stopwatch.prototype.display = function(title) {
+        title = title || ""
+        console.log("timer: " + this.run_time + " (" + title + ")");
+    }
+
+
+    stopwatch.prototype.reset = function() {
+        this.run_time = 0;
+    }
+
+    return stopwatch;
+})();
+

@@ -110,11 +110,6 @@ function Odometrino(){
 
 	this.setPropsChangeListener(function(){
 
-		if(_this.props[MOVE_STATUS] == 0){
-		
-			_this.turnRight();
-			_this.delayChangeProp(2000, MOVE_STATUS, 1);
-
 			distanceSensor.measure()
 				.then(function(distance){
 					$logText.append(distance + "<br>");
@@ -122,16 +117,23 @@ function Odometrino(){
 				}).catch(function(e){
 					console.warn(e);
 				});
+
+		if(_this.props[MOVE_STATUS] == 0){
+		
+			_this.turnRight();
+			_this.delayChangeProp(800, MOVE_STATUS, 1);
+
+		
 		
 		} else if(_this.props[MOVE_STATUS] == 1){
 		
 			_this.turnLeft();
-			_this.delayChangeProp(2000, MOVE_STATUS, 2);
+			_this.delayChangeProp(800, MOVE_STATUS, 2);
 		
 		} else if(_this.props[MOVE_STATUS] == 2) {
 		
 			_this.goStraight();
-			_this.delayChangeProp(1000, MOVE_STATUS, 0);
+			_this.delayChangeProp(800, MOVE_STATUS, 0);
 			
 		}
 	});
@@ -150,7 +152,7 @@ function Odometrino(){
 	}
 
 	this.rotateRad = function(rotation){
-		var ROTATE_SPEED_COEFF = 10;
+		var ROTATE_SPEED_COEFF = 100;
 		var ALLOW_RAD_SPAN = Util.degToRad(5.0); // 誤差許容角度
 		console.log(ALLOW_RAD_SPAN);
 	
@@ -186,6 +188,7 @@ function Odometrino(){
 
 				// #TODO 制御
 				_this.rotate(diffRad * ROTATE_SPEED_COEFF);
+				console.log(diffRad * ROTATE_SPEED_COEFF);
 
 			}
 
