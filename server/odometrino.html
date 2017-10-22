@@ -1,8 +1,18 @@
 <html>
 <head>
-<title>Androino Sample</title>
+<title>odometrino</title>
 
 <style type="text/css">
+	html, body {margin: 0;} 
+	#main-container {
+		list-style-type: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	#main-container li{
+	}
+
 	.map-container {
 		min-height: 100px;
    	 	border: solid 1px #cacaca;
@@ -68,40 +78,45 @@ $(function(){
 </script>
 </head>
 <body>
-	<div class="map-container">
-		this is map space
-	</div>
+	<ul id="main-container">
+		<li id="video-container"><video id="video"></video></li>
+		<li class="map-container">
+			this is map space
+		</li>
 
-	<table class="controller-constainer">
-		<tr>
-			<td>
-				<button id="reset-button"> reset</button>
-			</td>
-			<td>
-				<button id="stop-button"> stop </button>
-			</td>
-			<td>
-				<button id="proximity-button"> proximity </button>
-			</td>
-			<td id="proximity-value" class="orientation-text">0.0</td>
+		<li>
+			<table class="controller-constainer">
+				<tr>
+					<td>
+						<button id="reset-button"> reset</button>
+					</td>
+					<td>
+						<button id="stop-button"> stop </button>
+					</td>
+					<td>
+						<button id="proximity-button"> proximity </button>
+					</td>
+					<td id="proximity-value" class="orientation-text">0.0</td>
 
-		</tr>
-		<tr>
-			<td>
-				<button id="rotate-button"> rotate </button>
-			</td>
+				</tr>
+				<tr>
+					<td>
+						<button id="rotate-button"> rotate </button>
+					</td>
 
-			<td id="" class="orientation-title"> orientation </td>
-			<td id="orientation-alpha" class="orientation-text">0.0</td>
-			<td id="orientation-beta" class="orientation-text">0.0</td>
-			<td id="orientation-gamma" class="orientation-text">0.0</td>
-			<td id="orientation-rot" class="orientation-text">0.0</td>
-			<td id="orientation-sum" class="orientation-text">0.0</td>
-		</tr>
-	</table>
+					<td id="" class="orientation-title"> orientation </td>
+					<!--<td id="orientation-alpha" class="orientation-text">0.0</td>
+					<td id="orientation-beta" class="orientation-text">0.0</td>
+					<td id="orientation-gamma" class="orientation-text">0.0</td> 
+					<td id="orientation-rot" class="orientation-text">0.0</td>-->
+					<td id="orientation-sum" class="orientation-text">0.0</td>
+					<td id="orientation-diff" class="orientation-text">0.0</td>
+				</tr>
+			</table>
+		</li>
 
-	<div class="log-container">
-		<div class="log-text" id="log-text"></div>
-	</div>
+		<li class="log-container">
+			<div class="log-text" id="log-text"></div>
+		</li>
 </body>
 </html>

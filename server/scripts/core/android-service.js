@@ -8,45 +8,168 @@ function AndroidService(){
 			- マーカーを追う
 			- 
 	*/
-	var camController, video;
+	(function videoService(){
 
-	this.initDeviceCamera = function(_video){
-		
-		if(!_video){
-			video = document.createElement('video');
-		} else {
-			video = _video;
-		}
-		
-		video.autoplay = 'autoplay';
+		var video,  localStream;
+		var cameraData = [];
+		var camId = 1;
+		var resolution;
 
-		camController = new camera_controller(video);
-	};
+		this.RESOLUTION = {
+    		VGA: "VGA",
+    		HD: "HD" 
+  		};
 
-	this.startDeviceCamera = function(){
+ 		let RESOLUTION_HASH = {};
+  		RESOLUTION_HASH[this.RESOLUTION.VGA] = [640, 480];
+  		RESOLUTION_HASH[this.RESOLUTION.HD] = [1280, 720];
 
-		if(!camController || !camController.startCamera){
-			console.warn("startDeviceCamera is called before device camera initialization. "
-				+ "Please call initDeviceCamera");
+		this.initDeviceCamera = function(_video, _resolution){
 			
-			return;
+			if(!_video){
+				video = document.createElement('video');
+			} else {
+				video = _video;
+			}
+			
+			video.autoplay = 'autoplay';
+			
+			initCamera();
+
+			if(_resolution in this.RESOLUTION)
+      			resolution = _resolution;
+     		else
+      			resolution = "";
+		};
+
+		this.startDeviceCamera = function(){
+		
+			setCamera();
+			
+		};
+
+		this.stopDeviceCamera = function(){
+
+			stopCamera();
+		};
+
+		this.convertDeviceCamera = function(){
+
+			camId++;
+			
+			if(camId == cameraData.length){
+				camId = 0;
+			}
+			
+			setCamera();
+		
+		};
+
+		this.addLoadedEventListener = function(loadedFunc){
+			function wrappedLoadedFunc(){
+				video.removeEventListener('loadeddata', wrappedLoadedFunc);
+				loadedFunc(video.videoWidth, video.videoHeight);
+			}
+			video.addEventListener("loadeddata", wrappedLoadedFunc);
+  		};
+
+		function initCamera(){
+			if(!!MediaStreamTrack.getSources){
+				MediaStreamTrack.getSources(function(data){
+		            //カメラ情報を取得して、出力する
+		            var strCamera = "";
+		            var len = data.length;
+		            for( var i = 0 ; i < len ; i ++ ){
+		            	//strCamera += "<p>種類："+ data[i].kind+"<br/>ID："+ data[i].id+"</p>";
+		            	if( data[i].kind == "video" ){
+		            		cameraData.push(data[i]);
+		            	}
+		            }
+		            if( cameraData.length == 0 ){
+		            	alert("カメラが見つかりません");
+		            	return;
+		            }
+		            //カメラを取得・切り替える
+		            setCamera();
+		        });
+	        }else if(!!navigator.mediaDevices.enumerateDevices){
+	          	navigator.mediaDevices.enumerateDevices()
+	          	.then(function(devices) {
+	            	devices.forEach(function(device) {
+	              		if(device.kind === "videoinput"){
+	              			cameraData.push({id:device.deviceId, label: device.label});
+	              		}
+	            	});
+	            	setCamera();
+	          	})
+	          	.catch(function(err) {
+	            	console.error(err.name + ": " + err.message);
+	          	});
+	        }else{
+	        	//カメラを取得・切り替える
+	        	setCamera();   
+	        }
+	    }
+
+	    var setCamera = function(){
+		    navigator.getUserMedia = navigator.getUserMedia ||
+		    	navigator.webkitGetUserMedia || 
+		    	window.navigator.mozGetUserMedia;
+		    window.URL = window.URL || window.webkitURL;
+		    
+		    //カメラ再生中の場合は切り替えのため、一旦停止する
+		    stopCamera();
+
+		    if(cameraData.length > 0){
+		    	
+		    	if(camId > cameraData.length-1){
+		    		camId = 0;
+		    	}
+
+		    	var constraints = {
+		    		video: {
+		    			optional: [{sourceId: cameraData[camId].id }], //カメラIDを直接指定する
+					},
+					audio: false
+				};
+
+				if(resolution != ""){
+					constraints.video.mandatory = {
+						"minWidth": RESOLUTION_HASH[resolution][0],
+						"minHeight": RESOLUTION_HASH[resolution][1]
+		        	}
+		      	}
+		    }else{
+		    	var constraints = {video: true, audio: false};
+		    }
+
+		    //カメラをIDを使用して取得する
+		    navigator.getUserMedia(
+		    	constraints,
+
+		    	function(stream) {
+		        	//切り替え時にカメラを停止するため、情報を保存しておく
+		        	localStream = stream;
+		        	//カメラをvideoに結びつける
+		        	video.src = window.URL.createObjectURL(stream);
+		      	},
+		      	function(err) {
+		      		console.error(err);
+		      	}
+		    );
 		}
 
-		camController.startCamera();
+		function stopCamera(){
 
-	};
+			if( localStream ){
+	          localStream.getTracks().forEach(function (track) { track.stop()});
+	        }
 
-	this.stopDeviceCamera = function(){
+		}
 
-		//camController.stopCamera();
 	
-	};
+	}).call(this);
 
-	this.convertDeviceCamera = function(){
-
-		camController.convertCamera();
-	
-	};
 
 	/*
 		device motion 系	
