@@ -170,7 +170,7 @@ function Odometrino(){
 
 				//$rotText.text(_this.androidService.getRotation2D().toFixed(2));
 				$sumRotText.text(_this.androidService.getSumRotation2D().toFixed(2));
-				$diffRotText.test(diffRad.toFixed(2));
+				$diffRotText.text(diffRad.toFixed(2));
 	
 
 				if(Math.abs(diffRad) < ALLOW_RAD_SPAN ){
