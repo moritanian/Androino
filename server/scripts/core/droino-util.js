@@ -1,3 +1,77 @@
+var Util = {};
+
+
+// Copyright 2006 The Closure Library Authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS-IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * Inherit the prototype methods from one constructor into another.
+ *
+ * Usage:
+ * <pre>
+ * function ParentClass(a, b) { }
+ * ParentClass.prototype.foo = function(a) { };
+ *
+ * function ChildClass(a, b, c) {
+ *   ChildClass.base(this, 'constructor', a, b);
+ * }
+ * goog.inherits(ChildClass, ParentClass);
+ *
+ * var child = new ChildClass('a', 'b', 'see');
+ * child.foo(); // This works.
+ * </pre>
+ *
+ * @param {!Function} childCtor Child class.
+ * @param {!Function} parentCtor Parent class.
+ */
+Util.inherits = function(childCtor, parentCtor) {
+  /** @constructor */
+  function tempCtor() {}
+  tempCtor.prototype = parentCtor.prototype;
+  childCtor.superClass_ = parentCtor.prototype;
+  childCtor.prototype = new tempCtor();
+  /** @override */
+  childCtor.prototype.constructor = childCtor;
+
+  /**
+   * Calls superclass constructor/method.
+   *
+   * This function is only available if you use goog.inherits to
+   * express inheritance relationships between classes.
+   *
+   * NOTE: This is a replacement for goog.base and for superClass_
+   * property defined in childCtor.
+   *
+   * @param {!Object} me Should always be "this".
+   * @param {string} methodName The method name to call. Calling
+   *     superclass constructor can be done with the special string
+   *     'constructor'.
+   * @param {...*} var_args The arguments to pass to superclass
+   *     method/constructor.
+   * @return {*} The return value of the superclass method/constructor.
+   */
+  childCtor.base = function(me, methodName, var_args) {
+    // Copying using loop to avoid deop due to passing arguments object to
+    // function. This is faster in many JS engines as of late 2014.
+    var args = new Array(arguments.length - 2);
+    for (var i = 2; i < arguments.length; i++) {
+      args[i - 2] = arguments[i];
+    }
+    return parentCtor.prototype[methodName].apply(me, args);
+  };
+};
+
 /**
  * @author mrdoob / http://mrdoob.com/
  */
@@ -82,7 +156,6 @@ Object.assign( EventDispatcher.prototype, {
 
 } );
 
-var Util = {};
 
 Util.degToRad = function(deg){
 	return deg * Math.PI / 180.0;

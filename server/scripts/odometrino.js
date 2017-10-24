@@ -10,6 +10,8 @@ function Odometrino(){
 	// super constructer
 	DroinoBase.apply(this, arguments);
 
+	new this.androidService.ConsoleStream();
+	
 	var MOTOR_L1_PIN = 3;
 	var MOTOR_L2_PIN = 5;
 	var MOTOR_R1_PIN = 6;
@@ -23,6 +25,9 @@ function Odometrino(){
 
 	const MOVE_STATUS = "moveStatus";
 
+	const STATUS_ROTATING = 5;
+	const STATUS_ROTATE_FIN = 6;
+
 	var $logText = $("#log-text");
 	var $distanceValue = $("#distance-value");
 	var $stopButton = $("#stop-button");
@@ -32,8 +37,19 @@ function Odometrino(){
 	var $rotateButton = $("#rotate-button");
 	$stopButton.on("click", function(){
 		console.log("stop");
-		_this.props[MOVE_STATUS] = 5;
+		_this.props[MOVE_STATUS] = 7;
+
 		_this.androidService.stopDeviceCamera();
+		$("#video").hide();
+		slam.mapView.clearPoints();
+
+		distanceSensor.measure()
+			.then(function(distance){
+				$distanceValue.text(distance.toFixed(2));
+			}).catch(function(e){
+				console.warn(e);
+			});
+		
 	});
 
 	$resetButton.on("click", function(){
@@ -43,22 +59,26 @@ function Odometrino(){
 		// video
 		$("#video").show();
 		_this.androidService.initDeviceCamera($("#video").get(0));
+
 	});
 
 	$proximityButton.on("click", function(){
 		console.log("proximity");
-		_this.props[MOVE_STATUS] = 5;
+		_this.props[MOVE_STATUS] = STATUS_ROTATING;
 		_this.androidService.addDeviceProximityListener(function(event){
 			$proximityText.text(event.proximity);
 		});
+
+		throw new Error("sasda");
+		//a = b;
+		//console.error("sas");
 	});
 
 	var rotDir = 1;
 	$rotateButton.on("click", function(){
 		console.log("rotate");
 		_this.props[MOVE_STATUS] = 5;
-		rotDir = -rotDir;
-		_this.rotateDeg(90 * rotDir);
+	
 	});
 	
 	/*
@@ -122,41 +142,15 @@ function Odometrino(){
 		$sumRotText.text(_this.androidService.getSumRotation2D().toFixed(2));
 	});
 
+	// slam
+	var slam = new Slam($("#map-container").get(0));
 
-	this.addProp(MOVE_STATUS);
+	function animate(){
+		slam.mapView.update();
+		requestAnimationFrame(animate);
+	}
+	animate();
 
-	this.setPropsChangeListener(function(){
-
-			distanceSensor.measure()
-				.then(function(distance){
-					$distanceValue.text(distance.toFixed(2));
-
-				}).catch(function(e){
-					console.warn(e);
-				});
-
-		if(_this.props[MOVE_STATUS] == 0){
-		
-			_this.turnRight();
-			_this.delayChangeProp(800, MOVE_STATUS, 1);
-
-		
-		
-		} else if(_this.props[MOVE_STATUS] == 1){
-		
-			_this.turnLeft();
-			_this.delayChangeProp(800, MOVE_STATUS, 2);
-		
-		} else if(_this.props[MOVE_STATUS] == 2) {
-		
-			_this.goStraight();
-			_this.delayChangeProp(800, MOVE_STATUS, 0);
-			
-		}
-	});
-
-	this.props[MOVE_STATUS] = 5;
-	
 	var $alphaText =  $("#orientation-alpha");
 	var $betaText =  $("#orientation-beta");
 	var $gammaText =  $("#orientation-gamma");
@@ -166,8 +160,8 @@ function Odometrino(){
 
 	// #TODO droino baseにうつす
 	this.rotateDeg = function(deg){
-		this.rotateRad(Util.degToRad(deg));
-	}
+		return this.rotateRad(Util.degToRad(deg));
+	};
 
 	//
 	this.rotateRad = function(rotation){
@@ -213,7 +207,72 @@ function Odometrino(){
 			_this.androidService.addDeviceOrientationListener(rotationCallback);
 
 		}) ;
-	}
+	};
+
+	this.addProp(MOVE_STATUS);
+
+	this.setPropsChangeListener(function(){
+
+		if(_this.props[MOVE_STATUS] == 0){
+		
+			_this.turnRight();
+			_this.delayChangeProp(800, MOVE_STATUS, 1);
+
+		
+		
+		} else if(_this.props[MOVE_STATUS] == 1){
+		
+			_this.turnLeft();
+			_this.delayChangeProp(800, MOVE_STATUS, 2);
+		
+		} else if(_this.props[MOVE_STATUS] == 2) {
+		
+			_this.goStraight();
+			_this.delayChangeProp(800, MOVE_STATUS, 0);
+			
+		} else if(_this.props[MOVE_STATUS] == STATUS_ROTATING){
+			
+			rotDir = -rotDir;
+
+			_this.rotateDeg(90 * rotDir).then(function(){
+				_this.props[MOVE_STATUS] = STATUS_ROTATE_FIN;
+			});
+
+			function measureExec(){
+				
+				if(_this.props[MOVE_STATUS] != STATUS_ROTATING){
+					return;
+				}
+
+				setTimeout(measureExec, 60);
+
+				var measureStartRotation = _this.androidService.getSumRotation2D();
+				
+				distanceSensor.measureLow()
+					.then(function(distance){
+						
+						$distanceValue.text(distance.toFixed(2));
+
+						var measureEndRotation =  _this.androidService.getSumRotation2D();
+
+						var measureRotation = (measureStartRotation + measureEndRotation) / 2.0;
+
+						slam.move({x:0, y:0}, measureEndRotation);
+
+						slam.addSeenPoint(distance);
+
+					}).catch(function(e){
+						console.warn(e);
+					});
+			}
+
+			measureExec();
+
+		}
+	});
+
+	this.props[MOVE_STATUS] = 4;
+	
 	
 }
 

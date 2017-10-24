@@ -516,4 +516,110 @@ function AndroidService(){
 
 	}).call(this);
 
+	/*
+		IF 同じで console, socket , rtc に対応(送信 + 受信)
+	*/
+	(function stream(){
+		
+		const MESSAGE_TYPE = {
+			LOG: 1,
+			WARN: 2,
+			ERROR: 3,
+			MAP: 4,
+			ARDUINO: 5
+		};
+
+		function StreamBase(){
+		
+		}
+
+		StreamBase.prototype = {
+			log: function(l){
+				this.push();
+			},
+			warn: function(w){
+
+			},
+			error: function(message, file, line, col, error){
+
+			},
+			map: function(mine, points){
+
+			},
+			arduino: function(){
+
+			}
+		};
+		
+		this.ConsoleStream = function(){
+			
+			_this.ConsoleStream.base(this, 'constructor');
+
+			this.log = function(l){
+				this.push(l);
+			};
+
+			this.warn = function(w){
+				this.push(w);
+			};
+
+			this.error = function(e){
+				this.push(e)
+				console.trace();
+			};
+
+			this.push = function(a){
+				console.log("catch " + a);
+			};
+
+			setupStream(this);
+		};
+		Util.inherits(this.ConsoleStream, StreamBase);
+
+
+		this.SocketStream = function(){
+
+		};
+
+		this.RTCStream = function(){
+
+		};
+
+		/* 
+		console , error handling
+		*/
+		function setupStream(stream){
+			window.onerror = function (message, file, line, col, error) {
+				console.log(message);
+				console.log(`${file}:${line}`);
+				console.log(col);
+				console.log(error);
+
+				stream.error(message, file, line, col, error);
+				return false;
+			};
+
+			var consoleLog = console.log;
+			var consoleWarn = console.warn;
+			var consoleError = console.error;
+	/*
+			console.log = function(l){
+				stream.log(l)
+			};
+
+			console.warn = function(w){
+				stream.warn(w);
+			};
+
+			console.error = function(e){
+				stream.error(e);
+			};
+	*/
+
+		};
+
+	
+	
+	}).call(this);
+
 }

@@ -11,7 +11,7 @@ function UltrasonicDistanceSensor(arduino, opts){
 		this.arduino.appendDummySendSysex(
 			UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_REQUEST_COMMAND,
 			function(){
-				var distance = 2000 + Math.random() * 200; // [10um]
+				var distance = 50000 + Math.random() * 100000; // [10um]
 				var result 
 					= Arduino.encodeByteStream(
 						[(distance >> 16) & 0xff, (distance >> 8) & 0xff, distance & 0xff]

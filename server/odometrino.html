@@ -13,11 +13,9 @@
 	#main-container li{
 	}
 
-	.map-container {
+	#map-container {
 		min-height: 0px;
-   	 	border: solid 1px #cacaca;
-    	background-color: #f0fffc;
-		padding: 10px;
+   	 	
 	}	
 
 	.log-container {
@@ -69,8 +67,14 @@
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 
 <script type="text/javascript" src="./scripts/libs/jsfeat-min.js"></script>
+
+<!--
 <script type="text/javascript" src="./scripts/libs/math.min.js"></script>
 <script type="text/javascript" src="./scripts/libs/math-extension.js"></script>
+-->
+
+<script type="text/javascript" src="./scripts/libs/three.min.js"></script>
+<script type="text/javascript" src="./scripts/libs/orbitControls.js"></script>
 
 <script type="text/javascript" src="./scripts/core/arduino.js"></script>
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
@@ -81,6 +85,8 @@
 
 <script type="text/javascript" src="./scripts/core/droino-base.js"></script>
 <script type="text/javascript" src="./scripts/odometrino.js"></script>  
+<script type="text/javascript" src="./scripts/slam/slam.js"></script>  
+<script type="text/javascript" src="./scripts/slam/slam-view.js"></script>  
 <!--<script type="text/javascript" src="./scripts/async-droino.js"></script> --> 
 <!--<script type="text/javascript" src="./scripts/queue-droino.js"></script> -->
 
@@ -96,7 +102,7 @@ $(function(){
 <body>
 	<ul id="main-container">
 		<li id="video-container"><video id="video"></video></li>
-		<li class="map-container">
+		<li id="map-container">
 			
 		</li>
 
