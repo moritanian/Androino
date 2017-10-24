@@ -2,6 +2,8 @@ var Motor = (function(){
 
 	var maxValue = 255;
 
+	var offset;
+
 	function Motor(arduino, opts){
 
 		this.pin1 = opts.pin1;
@@ -15,6 +17,8 @@ var Motor = (function(){
 		this.arduino.pinMode(this.pin2, Arduino.PWM);
 
 		maxValue = opts.maxValue || maxValue;
+
+		offset = opts.offset || offset;
 	}
 
 	Motor.prototype.forward = function(value = maxValue){
@@ -65,14 +69,19 @@ var Motor = (function(){
 
 		} else {
 
-			this.backward(value);
+			this.backward(-value);
 
 		}
 
 	}
 
 	function validateAnalogValue(value){
-		return Math.min(Math.max(value, 0), maxValue);
+		var ranged = Math.min(Math.max(value, 0), maxValue);
+		if(ranged == 0){
+			return 0;
+		}
+		// linear in offset ~ max
+		return Math.floor(offset + ranged * (maxValue - offset) / maxValue);
 	}
 
 	return Motor;

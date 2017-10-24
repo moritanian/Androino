@@ -14,7 +14,7 @@
 	}
 
 	.map-container {
-		min-height: 100px;
+		min-height: 0px;
    	 	border: solid 1px #cacaca;
     	background-color: #f0fffc;
 		padding: 10px;
@@ -28,22 +28,38 @@
 		overflow: scroll;
 	}
 
+	.controller-container {
+		 border-collapse: collapse;
+	}
+
 	button {
 		width: 160px;
-		height: 30px;
+		height: 40px;
 		font-size: 20px;
 	}
 
-	.orientation-title{
+	.td-title{
 		background-color: #c50000;
 	    color: whitesmoke;
+		text-align: center;
+
 	}
 
-	.orientation-text {
+	td {
+		border-color: #64729e;
+    	border-style: solid;
+    	border-width: 2px 0;
+	}
+
+	.value-text {
 		width: 70px;
 		height: 30px;
 		background-color: #e6e6e6;
 		text-align: center;
+	}
+
+	#video {
+		display: none;
 	}
 
 	
@@ -81,11 +97,11 @@ $(function(){
 	<ul id="main-container">
 		<li id="video-container"><video id="video"></video></li>
 		<li class="map-container">
-			this is map space
+			
 		</li>
 
 		<li>
-			<table class="controller-constainer">
+			<table class="controller-container">
 				<tr>
 					<td>
 						<button id="reset-button"> reset</button>
@@ -96,7 +112,7 @@ $(function(){
 					<td>
 						<button id="proximity-button"> proximity </button>
 					</td>
-					<td id="proximity-value" class="orientation-text">0.0</td>
+					<td id="proximity-value" class="value-text">0.0</td>
 
 				</tr>
 				<tr>
@@ -104,13 +120,24 @@ $(function(){
 						<button id="rotate-button"> rotate </button>
 					</td>
 
-					<td id="" class="orientation-title"> orientation </td>
+					<td id="" class="td-title"> orientation </td>
 					<!--<td id="orientation-alpha" class="orientation-text">0.0</td>
 					<td id="orientation-beta" class="orientation-text">0.0</td>
 					<td id="orientation-gamma" class="orientation-text">0.0</td> 
 					<td id="orientation-rot" class="orientation-text">0.0</td>-->
-					<td id="orientation-sum" class="orientation-text">0.0</td>
-					<td id="orientation-diff" class="orientation-text">0.0</td>
+					<td id="orientation-sum" class="value-text">-</td>
+					<td id="orientation-diff" class="value-text">-</td>
+				</tr>
+				<tr>
+					<td class="td-title">
+						distance
+					</td>
+					<td id="distance-value" class="value-text">-</td>
+					<td>
+						
+					</td>
+					<td></td>
+
 				</tr>
 			</table>
 		</li>

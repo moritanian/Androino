@@ -205,6 +205,7 @@ function AndroidService(){
 		var rotation2D = 0;
 		var sumRotation2dUnit = 0; // +PI -PI 超えるごとに増減
 		var sumRotation2d = 0; 
+		var sumRotation2dDestination = 0; 
 
 		var defaultOrientation = screen.width > screen.height ? "landscape" : "portrait";
 
@@ -436,6 +437,22 @@ function AndroidService(){
 		this.getSumRotation2D = function(){
 			return sumRotation2d;
 		};
+
+		this.addSumRotation2DDestination = function(add){
+			sumRotation2dDestination += add;
+			return sumRotation2dDestination;
+		};
+
+		this.getRotation2DDiff = function(){
+			return sumRotation2dDestination - sumRotation2d;
+		};
+
+		// 目標角度を現在角度にリセット
+		this.resetSumRotation2D = function(){
+			sumRotation2dDestination = sumRotation2d; 
+		};
+
+
 
 	}).call(this);
 

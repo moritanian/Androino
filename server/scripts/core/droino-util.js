@@ -88,6 +88,10 @@ Util.degToRad = function(deg){
 	return deg * Math.PI / 180.0;
 }
 
+Util.radToDeg = function(rad){
+	return rad * 180.0 / Math.PI;
+}
+
 Util.trimmean = function(arr, range){
 	
 	var median = Util.median(arr);

@@ -73,11 +73,16 @@ $(function(){
                     class="pin-output-btn"
                     v-bind:class="[crtPinOutput == 'HIGH' ? 'output-high' : 'output-low']"
                     >{{crtPinOutput}}</button>
+                
+                <span v-if="crtPinMode === 'PWM'" class="pwm-value"> {{pwmValue}}</span>
+
+                
                 <input 
                     v-if="crtPinMode === 'PWM'" 
                     v-model="pwmValue" 
-                    v-on:change="onChangePWMValue" 
+                    v-on:input="onChangePWMValue" 
                     type="range" name="range"
+                    max="255"
                     class="pwm-value-range-input">
                 
                 <button 
@@ -143,7 +148,7 @@ $(function(){
             onChangePWMValue: function(e){
                 console.log('PWM value change ');
                 console.log(this.pwmValue); // 0-100
-                arduino.analogWrite(this.pin.pinNo, Math.floor(this.pwmValue*2.55));
+                arduino.analogWrite(this.pin.pinNo, Math.floor(this.pwmValue));
 
             }
         }

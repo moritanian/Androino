@@ -24,6 +24,7 @@ function Odometrino(){
 	const MOVE_STATUS = "moveStatus";
 
 	var $logText = $("#log-text");
+	var $distanceValue = $("#distance-value");
 	var $stopButton = $("#stop-button");
 	var $resetButton = $("#reset-button");
 	var $proximityButton = $("#proximity-button");
@@ -37,9 +38,10 @@ function Odometrino(){
 
 	$resetButton.on("click", function(){
 		console.log("reset");
-		_this.props[MOVE_STATUS] = 1;
+		//_this.props[MOVE_STATUS] = 1;
 
 		// video
+		$("#video").show();
 		_this.androidService.initDeviceCamera($("#video").get(0));
 	});
 
@@ -51,20 +53,30 @@ function Odometrino(){
 		});
 	});
 
+	var rotDir = 1;
 	$rotateButton.on("click", function(){
 		console.log("rotate");
 		_this.props[MOVE_STATUS] = 5;
-		_this.rotateDeg(90);
+		rotDir = -rotDir;
+		_this.rotateDeg(90 * rotDir);
 	});
+	
+	/*
+		片側で 120
+		両輪で 95
+	*/
+	const offset = 95;
 
 	var motorRight = new Motor(this.arduino, {
 		pin1: MOTOR_R1_PIN,
-		pin2: MOTOR_R2_PIN
+		pin2: MOTOR_R2_PIN,
+		offset: offset
 	});
 
 	var motorLeft = new Motor(this.arduino, {
 		pin1: MOTOR_L1_PIN,
-		pin2: MOTOR_L2_PIN
+		pin2: MOTOR_L2_PIN,
+		offset: offset
 	});
 
 	var distanceSensor = new UltrasonicDistanceSensor(
@@ -103,8 +115,13 @@ function Odometrino(){
 	}
 
 
-	//
+	// sensdors
 	this.androidService.initIMUListener();
+
+	_this.androidService.addDeviceOrientationListener(function(){
+		$sumRotText.text(_this.androidService.getSumRotation2D().toFixed(2));
+	});
+
 
 	this.addProp(MOVE_STATUS);
 
@@ -112,7 +129,7 @@ function Odometrino(){
 
 			distanceSensor.measure()
 				.then(function(distance){
-					$logText.append(distance + "<br>");
+					$distanceValue.text(distance.toFixed(2));
 
 				}).catch(function(e){
 					console.warn(e);
@@ -138,7 +155,7 @@ function Odometrino(){
 		}
 	});
 
-	this.props[MOVE_STATUS] = 0;
+	this.props[MOVE_STATUS] = 5;
 	
 	var $alphaText =  $("#orientation-alpha");
 	var $betaText =  $("#orientation-beta");
@@ -147,16 +164,18 @@ function Odometrino(){
 	var $sumRotText =  $("#orientation-sum");
 	var $diffRotText =  $("#orientation-diff");
 
+	// #TODO droino baseにうつす
 	this.rotateDeg = function(deg){
 		this.rotateRad(Util.degToRad(deg));
 	}
 
+	//
 	this.rotateRad = function(rotation){
-		var ROTATE_SPEED_COEFF = 100;
-		var ALLOW_RAD_SPAN = Util.degToRad(5.0); // 誤差許容角度
+		var ROTATE_SPEED_COEFF = 30;
+		var ALLOW_RAD_SPAN = Util.degToRad(0.2); // 誤差許容角度
 		console.log(ALLOW_RAD_SPAN);
 	
-		var destSumRotation = this.androidService.getSumRotation2D() + rotation;
+		this.androidService.addSumRotation2DDestination(rotation);
 
 		return new Promise(function(resolve, reject){
 
@@ -168,11 +187,10 @@ function Odometrino(){
 				$betaText.text(crtOrientation.beta.toFixed(2));
 				$gammaText.text(crtOrientation.gamma.toFixed(2));
 */
-				var diffRad = destSumRotation - _this.androidService.getSumRotation2D();
+				var diffRad = _this.androidService.getRotation2DDiff();
 
 				//$rotText.text(_this.androidService.getRotation2D().toFixed(2));
-				$sumRotText.text(_this.androidService.getSumRotation2D().toFixed(2));
-				$diffRotText.text(diffRad.toFixed(2));
+				$diffRotText.text(Util.radToDeg(diffRad).toFixed(2));
 	
 
 				if(Math.abs(diffRad) < ALLOW_RAD_SPAN ){

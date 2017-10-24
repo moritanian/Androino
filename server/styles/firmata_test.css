@@ -48,6 +48,39 @@
 	height: 10px;
 }
 
+.pwm-value {
+	display: inline-block;
+    width: 20px;
+    text-align: right;
+    font-size: 14px;
+}
+
+.pwm-value-range-input[type="range"] {
+ 	-webkit-appearance: none;
+ 	appearance: none;
+    background-color: #000000;
+    height: 4px;
+    border-radius: 6px;
+
+  &:focus,
+  &:active {
+    outline: none;
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    display: block;
+    border: 2px solid #fb5986;
+    background-color: #fff;
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+  }
+}
 
 
 button.pin-output-btn,
