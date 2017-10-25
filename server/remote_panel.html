@@ -76,27 +76,68 @@
 <script type="text/javascript" src="./scripts/libs/three.min.js"></script>
 <script type="text/javascript" src="./scripts/libs/OrbitControls.js"></script>
 
-<script type="text/javascript" src="./scripts/core/arduino.js"></script>
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
 <script type="text/javascript" src="./scripts/core/droino-util.js"></script>
 
-<script type="text/javascript" src="./scripts/components/motor.js"></script>
-<script type="text/javascript" src="./scripts/components/ultrasonic_distance_sensor.js"></script>
+
 
 <script type="text/javascript" src="./scripts/core/droino-base.js"></script>
 <script type="text/javascript" src="./scripts/odometrino.js"></script>  
 <script type="text/javascript" src="./scripts/slam/slam.js"></script>  
 <script type="text/javascript" src="./scripts/slam/slam-view.js"></script>  
-<!--<script type="text/javascript" src="./scripts/async-droino.js"></script> --> 
-<!--<script type="text/javascript" src="./scripts/queue-droino.js"></script> -->
 
 <script src="https://rtc-world-s.herokuapp.com/socket.io/socket.io.js"></script> 
-
 
 <script type="text/javascript">
 'use strict';
 $(function(){
-   var odometrino = new Odometrino();
+
+	var service = new AndroidService();
+
+	// slam
+	var slam = new Slam($("#map-container").get(0));
+
+	function animate(){
+		slam.mapView.update();
+		requestAnimationFrame(animate);
+	}
+	animate();
+
+
+	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
+
+	var stream = new service.SocketStream(WSUrl);
+
+	stream.onMessage(stream.MESSAGE_TYPE.LOG, function(e){
+		console.log(e.value);
+   	});
+
+	stream.onMessage(stream.MESSAGE_TYPE.WARN, function(e){
+		console.warn(e.value);
+   	});
+
+   	stream.onMessage(stream.MESSAGE_TYPE.ERROR, function(e){
+   		// TODO 送られてきたエラーが表示されるように
+		var err = new Error(e.message, e.file, e.line);
+		throw err;
+   	});
+
+   	stream.onMessage(stream.MESSAGE_TYPE.MAP, function(e){
+
+   		if(e.mine){
+	
+	   		slam.move(e.mine[0], e.mine[1]);
+
+   		}
+
+   		if(e.distance){
+   			slam.addSeenPoint(e.distance);
+   		}
+
+   	});
+
+	stream.startStream();
+
 });
         
 </script>
@@ -104,51 +145,8 @@ $(function(){
 <body>
 	<ul id="main-container">
 		<li id="video-container"><video id="video"></video></li>
-		<li id="map-container">
-			
-		</li>
+		<li id="map-container"></li>
 
-		<li>
-			<table class="controller-container">
-				<tr>
-					<td>
-						<button id="reset-button"> reset</button>
-					</td>
-					<td>
-						<button id="stop-button"> stop </button>
-					</td>
-					<td>
-						<button id="proximity-button"> proximity </button>
-					</td>
-					<td id="proximity-value" class="value-text">0.0</td>
-
-				</tr>
-				<tr>
-					<td>
-						<button id="rotate-button"> rotate </button>
-					</td>
-
-					<td id="" class="td-title"> orientation </td>
-					<!--<td id="orientation-alpha" class="orientation-text">0.0</td>
-					<td id="orientation-beta" class="orientation-text">0.0</td>
-					<td id="orientation-gamma" class="orientation-text">0.0</td> 
-					<td id="orientation-rot" class="orientation-text">0.0</td>-->
-					<td id="orientation-sum" class="value-text">-</td>
-					<td id="orientation-diff" class="value-text">-</td>
-				</tr>
-				<tr>
-					<td class="td-title">
-						distance
-					</td>
-					<td id="distance-value" class="value-text">-</td>
-					<td>
-						
-					</td>
-					<td></td>
-
-				</tr>
-			</table>
-		</li>
 
 		<li class="log-container">
 			<div class="log-text" id="log-text"></div>

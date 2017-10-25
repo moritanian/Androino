@@ -10,7 +10,11 @@ function Odometrino(){
 	// super constructer
 	DroinoBase.apply(this, arguments);
 
-	new this.androidService.ConsoleStream();
+	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
+
+	var stream = new this.androidService.SocketStream(WSUrl);
+
+	stream.startStream();
 	
 	var MOTOR_L1_PIN = 3;
 	var MOTOR_L2_PIN = 5;
@@ -257,9 +261,12 @@ function Odometrino(){
 
 						var measureRotation = (measureStartRotation + measureEndRotation) / 2.0;
 
-						slam.move({x:0, y:0}, measureEndRotation);
+						slam.move({x:0, y:0}, measureRotation);
 
 						slam.addSeenPoint(distance);
+
+						stream.map([{x: 0, y:0}, measureRotation], distance);
+
 
 					}).catch(function(e){
 						console.warn(e);

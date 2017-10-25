@@ -481,7 +481,11 @@ function AndroidService(){
 
       			if(onConnected){
 
-        			onConnected(myId);
+      				if(onConnected){
+	
+	        			onConnected(myId);
+
+      				}
       			
       			}
 
@@ -489,30 +493,42 @@ function AndroidService(){
     
     		// message.from
     		socket.on('message', function(message) {
-    		
-    			onMessage(message);
-    		
+    			
+    			if(onMessage){		
+    			
+    				onMessage(message);
+    			
+    			}	
     		});
 
     		socket.on('disconnect', function() {
     			
     			isConnected = false;
 
-    			onDisconnected();
+
+    			if(onDisconnected){
+
+	    			onDisconnected();
+
+    			}
     		
     		});
-		}
+		};
 
 		// message.sendto
 		this.WSpost = function(message){
 			
 			socket.emit('message', message);
 		
-		}
+		};
 
 		this.WSisConnected = function(){
 			return isConnected;
-		}
+		};
+
+		this.WSdisconnect = function(){
+			socket.disconnect();
+		};
 
 	}).call(this);
 
@@ -543,12 +559,13 @@ function AndroidService(){
 			error: function(message, file, line, col, error){
 
 			},
-			map: function(mine, points){
+			map: function(mine, distance){
 
 			},
 			arduino: function(){
 
-			}
+			},
+			MESSAGE_TYPE: MESSAGE_TYPE
 		};
 		
 		this.ConsoleStream = function(){
@@ -573,13 +590,81 @@ function AndroidService(){
 			};
 
 			setupStream(this);
+		
 		};
+		
 		Util.inherits(this.ConsoleStream, StreamBase);
 
 
-		this.SocketStream = function(){
+		this.SocketStream = function(WSUrl){
+			
+			_this.SocketStream.base(this, 'constructor');
+
+			var onmessageDispatcher = new EventDispatcher();
+
+
+			this.startStream = function(){
+
+				var WSRoomName = "androino-stream";
+	
+				_this.WSinit(WSUrl, WSRoomName, function(message){
+					
+					onmessageDispatcher.dispatchEvent(message);
+					
+				});
+			};
+
+			this.endStream = function(){
+				this.WSdisconnect();
+			};
+
+			this.log = function(l){
+				this.postMessage({
+					type: MESSAGE_TYPE.LOG,
+					value: l
+				});
+			};
+
+			this.warn = function(l){
+				this.postMessage({
+					type: MESSAGE_TYPE.WARN,
+					value: l
+				});
+			};
+
+			this.error = function(message, file, line, col, error){
+				this.postMessage({
+					type: MESSAGE_TYPE.ERROR,
+					message: message,
+					file: file,
+					line: line,
+					col: col,
+					error: error
+				});
+			};
+
+			this.map = function(mine, distance){
+				this.postMessage({
+					type: MESSAGE_TYPE.MAP,
+					mine: mine,
+					distance: distance
+				});
+			};
+
+			this.postMessage = function(obj){
+				_this.WSpost(obj);
+			};
+
+
+			this.onMessage = function(type, func){
+				onmessageDispatcher.addEventListener(type, func);
+			};
+
+			setupStream(this);
 
 		};
+
+		Util.inherits(this.SocketStream, StreamBase);
 
 		this.RTCStream = function(){
 
@@ -590,11 +675,11 @@ function AndroidService(){
 		*/
 		function setupStream(stream){
 			window.onerror = function (message, file, line, col, error) {
-				console.log(message);
+			/*	console.log(message);
 				console.log(`${file}:${line}`);
 				console.log(col);
 				console.log(error);
-
+				*/
 				stream.error(message, file, line, col, error);
 				return false;
 			};
