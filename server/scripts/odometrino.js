@@ -325,6 +325,31 @@ function Odometrino(){
 
 	this.props[MOVE_STATUS] = 4;
 
+
+	// sensor chart
+	//var ctx = document.getElementById('myChart').getContext('2d');
+	var chart = Util.ChartBuilder.createLineChart(document.getElementById('myChart'),
+		[{label: "alpha", id: "alpha", type: "number"},
+		 {label: "beta", id: "beta", type: "number" },
+		 {label: "gamma", id: "gamma", type: "number"}], 
+		{yMax: 180, yMin: -180, xNum: 60});
+
+	/*
+	chart.start(function(){
+			var o = _this.androidService.getDeviceOrientation();
+			return [o.alpha, o.beta, o.gamma];
+		},
+		100,);
+	*/
+	_this.androidService.addDeviceOrientationListener(function(event){
+		chart.addData([
+			event.deviceOrientation.alpha, 
+			event.deviceOrientation.beta, 
+			event.deviceOrientation.gamma],
+			"124");
+	});
+	
+
 }
 
 Odometrino.prototype = Object.create(DroinoBase.prototype);
