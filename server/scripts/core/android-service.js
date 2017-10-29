@@ -174,9 +174,6 @@ function AndroidService(){
 	/*
 		device motion 系	
 		使う場合は必ず最初に initIMUListener する
-
-		Copyright © 2015 lamplightdev. All rights reserved.
-		https://github.com/lamplightdev/compass
 	    
 	*/
 
@@ -187,6 +184,7 @@ function AndroidService(){
 		var IMUDispatcher = new EventDispatcher();
 		var DEVICE_MOTION_EVENT = "DEVICE_MOTION_EVENT";
 		var DEVICE_PROXIMITY_EVENT = "DEVICE_PROXIMITY_EVENT";
+		var VISUAL_ODOMETRY_EVENT = "VISUAL_ODOMETRY_EVENT";
 		var DEVICE_ORIENTATION_EVENT = "DEVICE_ORIENTATION_EVENT";
 		var SCREEN_ORIENTATION_EVENT = "SCREEN_ORIENTATION_EVENT";
 
@@ -198,7 +196,14 @@ function AndroidService(){
 		}
 
 		// proximity;
-		proximity = 0.0;
+		var proximity = 0.0;
+
+		// visual odometry
+		var visualOdometryData = {
+			x: 0,
+			y: 0,
+			z: 0
+		};
 
 		// rotation 
 		var lastRotation2d = 0;
@@ -209,11 +214,52 @@ function AndroidService(){
 
 		var defaultOrientation = screen.width > screen.height ? "landscape" : "portrait";
 
+		var motionTimeWatch;
+		const accThreshold = 0.01;
+
 		var onDeviceMotionChangeEvent = function( event){
+
+			if(!event.acceleration || event.acceleration.x == null)
+				return;
+
+			var deltaTime;
+			if(motionTimeWatch){
+				deltaTime = motionTimeWatch.get_and_start();
+			} else {
+				motionTimeWatch = new Util.stopwatch();
+				deltaTime = 0;
+			}
+
+			var oldAcc = {
+				x: motionData.acc.x,
+				y: motionData.acc.y,
+				z: motionData.acc.z
+			};
 
 			motionData.acc.x = event.acceleration.x;
 			motionData.acc.y = event.acceleration.y;
 			motionData.acc.z = event.acceleration.z;
+
+			var oldVel = {
+				x: motionData.vel.x,
+				y: motionData.vel.y,
+				z: motionData.vel.z
+			};
+
+			motionData.vel.x += (motionData.acc.x + oldAcc.x) * deltaTime / 2.0;
+			motionData.vel.y += (motionData.acc.y + oldAcc.y) * deltaTime / 2.0;
+			motionData.vel.z += (motionData.acc.z + oldAcc.z) * deltaTime / 2.0;
+
+			motionData.pos.x += (motionData.vel.x + oldVel.x) * deltaTime / 2.0;
+			motionData.pos.y += (motionData.vel.y + oldVel.y) * deltaTime / 2.0;
+			motionData.pos.z += (motionData.vel.z + oldVel.z) * deltaTime / 2.0;
+
+			if(Math.abs(motionData.acc.x) < accThreshold &&
+				Math.abs(motionData.acc.y) < accThreshold &&
+				Math.abs(motionData.acc.z) < accThreshold){
+
+				_this.clearDeviceVelocity();
+			}
 
 			IMUDispatcher.dispatchEvent({
 				type: DEVICE_MOTION_EVENT,
@@ -233,6 +279,23 @@ function AndroidService(){
 
 		};
 
+		var onVisualOdometryEvent = function(event){
+
+			visualOdometryData.x = event.x;
+			visualOdometryData.y = event.y;
+			visualOdometryData.z = event.z;
+			
+			IMUDispatcher.dispatchEvent({
+				type: VISUAL_ODOMETRY_EVENT,
+				visualOdometryData: visualOdometryData
+			});
+
+		};
+
+		/*
+			Copyright © 2015 lamplightdev. All rights reserved.
+			https://github.com/lamplightdev/compass
+		*/
 		var onDeviceOrientationChangeEvent = function( event ) {
 
 			deviceOrientation = event;
@@ -378,6 +441,17 @@ function AndroidService(){
 
 		};
 
+		this.addVisualOdometryEventListener = function(func){
+
+			IMUDispatcher.addEventListener(VISUAL_ODOMETRY_EVENT, func);
+
+		};
+
+		this.removeVisualOdometryEventListener = function(func){
+
+			IMUDispatcher.removeEventListener(VISUAL_ODOMETRY_EVENT, func);
+
+		}
 
 
 
@@ -411,9 +485,9 @@ function AndroidService(){
 			window.addEventListener( 'orientationchange', onScreenOrientationChangeEvent, false );
 			window.addEventListener( 'deviceorientation', onDeviceOrientationChangeEvent, false );
 
-			// 
+			// called from java native
 			window.addEventListener("deviceproximity", onDeviceProximityChangeEvent, false);
-
+			window.addEventListener("visualodometry", onVisualOdometryEvent, false);
 
 		};
 
@@ -446,6 +520,43 @@ function AndroidService(){
 		this.getRotation2DDiff = function(){
 			return sumRotation2dDestination - sumRotation2d;
 		};
+
+		this.getDeviceVelocity = function(){
+			return {
+				x: motionData.vel.x,
+				y: motionData.vel.y,
+				z: motionData.vel.z
+			};
+		};
+
+		this.getDevicePosition = function(){
+			return {
+				x: motionData.pos.x,
+				y: motionData.pos.y,
+				z: motionData.pos.z
+			};
+		};
+
+		this.getVisualOdometryPosition = function(){
+			return {
+				x: visualOdometryData.x,
+				y: visualOdometryData.y,
+				z: visualOdometryData.z
+			};
+		};
+
+		this.clearDevicePosition = function(){
+			motionData.pos.x = 0;
+			motionData.pos.y = 0;
+			motionData.pos.z = 0;
+		};
+
+		this.clearDeviceVelocity = function(){
+			motionData.vel.x = 0;
+			motionData.vel.y = 0;
+			motionData.vel.z = 0;
+		};
+
 
 		// 目標角度を現在角度にリセット
 		this.resetSumRotation2D = function(){
@@ -676,10 +787,10 @@ function AndroidService(){
 		function setupStream(stream){
 			window.onerror = function (message, file, line, col, error) {
 			/*	console.log(message);
-				console.log(`${file}:${line}`);
-				console.log(col);
-				console.log(error);
-				*/
+			*/
+				console.error(`${file}:${line} ${col}`);
+				console.error(error);
+				
 				stream.error(message, file, line, col, error);
 				return false;
 			};

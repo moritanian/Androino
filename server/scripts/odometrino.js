@@ -43,6 +43,9 @@ function Odometrino(){
 		console.log("stop");
 		_this.props[MOVE_STATUS] = 7;
 
+		_this.androidService.clearDeviceVelocity();
+		_this.androidService.clearDevicePosition();
+
 		_this.androidService.stopDeviceCamera();
 		$("#video").hide();
 		slam.mapView.clearPoints();
@@ -89,7 +92,7 @@ function Odometrino(){
 		片側で 120
 		両輪で 95
 	*/
-	const offset = 95;
+	const offset = 100;
 
 	var motorRight = new Motor(this.arduino, {
 		pin1: MOTOR_R1_PIN,
@@ -107,7 +110,8 @@ function Odometrino(){
 		this.arduino,
 		{
 			trigPin: US_DISTANCE_TRIG_PIN,
-			echoPin: US_DISTANCE_ECHO_PIN
+			echoPin: US_DISTANCE_ECHO_PIN,
+			androidService: this.androidService
 		});
 
 	// arduino functions
@@ -147,10 +151,11 @@ function Odometrino(){
 	});
 
 	// slam
-	var slam = new Slam($("#map-container").get(0));
+	var slam = new Slam();
 
 	function animate(){
-		slam.mapView.update();
+		if(slam.mapView)
+			slam.mapView.update();
 		requestAnimationFrame(animate);
 	}
 	animate();
@@ -161,6 +166,19 @@ function Odometrino(){
 	var $rotText =  $("#orientation-rot");
 	var $sumRotText =  $("#orientation-sum");
 	var $diffRotText =  $("#orientation-diff");
+
+	var $accXText =  $("#accX-text");
+	var $accYText =  $("#accY-text");
+	var $accZText =  $("#accZ-text");
+
+	var $velXText =  $("#velX-text");
+	var $velYText =  $("#velY-text");
+	var $velZText =  $("#velZ-text");
+
+	var $posXText =  $("#posX-text");
+	var $posYText =  $("#posY-text");
+	var $posZText =  $("#posZ-text");
+
 
 	// #TODO droino baseにうつす
 	this.rotateDeg = function(deg){
@@ -173,6 +191,7 @@ function Odometrino(){
 		var ALLOW_RAD_SPAN = Util.degToRad(0.2); // 誤差許容角度
 		console.log(ALLOW_RAD_SPAN);
 	
+		this.androidService.resetSumRotation2D(); 
 		this.androidService.addSumRotation2DDestination(rotation);
 
 		return new Promise(function(resolve, reject){
@@ -203,7 +222,8 @@ function Odometrino(){
 				}
 
 				// #TODO 制御
-				_this.rotate(diffRad * ROTATE_SPEED_COEFF);
+				//_this.rotate(diffRad * ROTATE_SPEED_COEFF);
+				_this.rotate(10 );
 				console.log(diffRad * ROTATE_SPEED_COEFF);
 
 			}
@@ -238,7 +258,7 @@ function Odometrino(){
 			
 			rotDir = -rotDir;
 
-			_this.rotateDeg(90 * rotDir).then(function(){
+			_this.rotateDeg(360 * rotDir).then(function(){
 				_this.props[MOVE_STATUS] = STATUS_ROTATE_FIN;
 			});
 
@@ -278,9 +298,33 @@ function Odometrino(){
 		}
 	});
 
+	/*
+
+	this.androidService.addDeviceMotionListener(function(event){
+		var motionData = event.motionData;
+
+		$accXText.text(motionData.acc.x.toFixed(4));
+		$accYText.text(motionData.acc.y.toFixed(4));
+		$accZText.text(motionData.acc.z.toFixed(4));
+
+		$velXText.text(motionData.vel.x.toFixed(4));
+		$velYText.text(motionData.vel.y.toFixed(4));
+		$velZText.text(motionData.vel.z.toFixed(4));
+
+		$posXText.text(motionData.pos.x.toFixed(4));
+		$posYText.text(motionData.pos.y.toFixed(4));
+		$posZText.text(motionData.pos.z.toFixed(4));
+
+	});
+	*/
+
+	this.androidService.addVisualOdometryEventListener(function(event){
+		var pos = event.visualOdometryData;
+		slam.move({x: pos.x, y: pos.y},  _this.androidService.getSumRotation2D());
+	});
+
 	this.props[MOVE_STATUS] = 4;
-	
-	
+
 }
 
 Odometrino.prototype = Object.create(DroinoBase.prototype);

@@ -75,6 +75,10 @@
 
 <script type="text/javascript" src="./scripts/libs/three.min.js"></script>
 <script type="text/javascript" src="./scripts/libs/OrbitControls.js"></script>
+<!--
+<script type="text/javascript" src="./scripts/libs/Chart.bundle.min.js"></script>
+-->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 <script type="text/javascript" src="./scripts/core/arduino.js"></script>
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
@@ -147,11 +151,34 @@ $(function(){
 					<td></td>
 
 				</tr>
+
+				<tr>
+					<td class="td-title"> acceleration </td>
+					<td id="accX-text" class="value-text"></td>
+					<td id="accY-text" class="value-text"></td>
+					<td id="accZ-text" class="value-text"></td>
+				</tr>
+				<tr>
+					<td class="td-title"> velocity </td>
+					<td id="velX-text" class="value-text"></td>
+					<td id="velY-text" class="value-text"></td>
+					<td id="velZ-text" class="value-text"></td>
+				</tr>
+
+				<tr>
+					<td class="td-title"> position </td>
+					<td id="posX-text" class="value-text"></td>
+					<td id="posY-text" class="value-text"></td>
+					<td id="posZ-text" class="value-text"></td>
+				</tr>
 			</table>
 		</li>
-
+		<li>
+			<div id="myChart"></div>
+		</li>
 		<li class="log-container">
 			<div class="log-text" id="log-text"></div>
 		</li>
+
 </body>
 </html>

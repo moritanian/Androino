@@ -201,39 +201,48 @@ Util.median = (function(){
 	return median;
 })();
 
+Util.getTime = function(){
+	new Date().getTime();
+};
+
 Util.stopwatch = (function() {
     function stopwatch() {
         this.start_time = 0;
         this.stop_time = 0;
         this.run_time = 0;
         this.running = false;
-    }
+    };
 
     stopwatch.prototype.start = function() {
         this.start_time = new Date().getTime();
         this.running = true;
-    }
+    };
 
     stopwatch.prototype.stop = function() {
         this.stop_time = new Date().getTime();
         this.run_time = (this.stop_time - this.start_time);
         this.running = false;
-    }
+    };
 
     stopwatch.prototype.get_runtime = function() {
         return this.run_time;
-    }
+    };
 
      stopwatch.prototype.display = function(title) {
         title = title || ""
         console.log("timer: " + this.run_time + " (" + title + ")");
-    }
+    };
 
 
     stopwatch.prototype.reset = function() {
         this.run_time = 0;
+    };
+
+    stopwatch.prototype.get_and_start = function(){
+    	var old_start_time = this.start_time;
+    	this.start_time = new Date().getTime();
+    	return this.start_time - old_start_time;
     }
 
     return stopwatch;
 })();
-

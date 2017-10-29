@@ -88,6 +88,7 @@
 
 <script src="https://rtc-world-s.herokuapp.com/socket.io/socket.io.js"></script> 
 
+
 <script type="text/javascript">
 'use strict';
 $(function(){
@@ -96,6 +97,10 @@ $(function(){
 
 	// slam
 	var slam = new Slam($("#map-container").get(0));
+	slam.setDepthSensorLocation({
+		x:  -60,
+		y:  -60
+	}, - Math.PI/ 2.0)
 
 	function animate(){
 		slam.mapView.update();
@@ -132,11 +137,18 @@ $(function(){
 
    		if(e.distance){
    			slam.addSeenPoint(e.distance);
+	   		$("#distance-text").text(e.distance);
+
    		}
 
    	});
 
 	stream.startStream();
+
+	var $resetButton = $("#reset-button");
+	$resetButton.click(function(){
+		slam.mapView.clearPoints();		
+	});
 
 });
         
@@ -146,10 +158,14 @@ $(function(){
 	<ul id="main-container">
 		<li id="video-container"><video id="video"></video></li>
 		<li id="map-container"></li>
-
-
+		<li>
+			<button id="reset-button">reset</button>
+			<div id="distance-text"></div>
+		</li>
+	
 		<li class="log-container">
 			<div class="log-text" id="log-text"></div>
 		</li>
+
 </body>
 </html>
