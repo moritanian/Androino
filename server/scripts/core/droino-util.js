@@ -265,64 +265,15 @@ Util.ArrayBuilder = function(value){
 	return funcs;
 };
 
-Util.wait = function(callback){
-	setTimeout(callback, 1000);
-};
-
-Util.ThenableMaker = function(notThenable, timeout = -1){
-	return new Promise(function(resolve, reject){
-		notThenable(resolve);	
-	});
-}
-
-Util.TaskWaiter = function(){
-	this.tasks = [];
-	this.waitingFlag = false;
-	this.readyFlag = false;
-};
-
-Util.TaskWaiter.prototype = {
-	setWaitTask: function(task){
-
-	},
-	setReady: function(){
-		this.waitingFlag = false;
-		this.readyFlag = true;
-	},
-	addTask: function(task){
-		if(this.readyFlag){
-			task();
-		} else {
-			this.tasks.push(task);
-		}
-	}
-}
-
 /* 
 	chart.js wrapper 
 	real time chart for sensor values
 */
 Util.ChartBuilder = (function(){
-
-	var thenable;
-
-	function init(){
-		
-		google.charts.load('current', {packages: ['corechart', 'line']});
-		
-		return new Promise(google.charts.setOnLoadCallback);
-	}
-
-	function ready(){
-		if(!thenable){
-			thenable = init();
-		}
-		return thenable;
-	}
 	
 	var creators = {};
 
-	var colors = [
+	colors = [
 		"rgba(250, 10, 10, 1)",
 		"rgba(10, 250, 10, 1)",
 		"rgba(10, 10, 250, 1)",
@@ -333,103 +284,115 @@ Util.ChartBuilder = (function(){
 
 	creators.createLineChart = function(ctx, _datasets, _option = {}){
 		
-		var _chart = {}, chart;
-
 		var intervalId;
 		var datasets = [];
 		var xNum = _option.xNum || 100;
+		console.log(_datasets.length);
+		for(var i=0; i< _datasets.length; i++){
+			datasets.push({
+				label: _datasets[i].label,
+				fill: false,
+		 		lineTension: 0.2,
+		 		backgroundColor: "rgba(75,192,192,0.4)",
+		 		borderColor: colors[i],
+		 		borderCapStyle: 'butt',
+		 		borderDash: [],
+		 		borderDashOffset: 0.0,
+		 		borderWidth: 1,
+		 		borderJoinStyle: 'miter',
+		 		pointBorderColor: colors[i],
+		 		pointBackgroundColor: "#fff",
+		 		pointBorderWidth: 1,
+		 		pointHoverRadius: 5,
+		 		pointHoverBackgroundColor: colors[i],
+		 		pointHoverBorderColor: "rgba(220,220,220,1)",
+		 		pointHoverBorderWidth: 2,
+		 		pointRadius: 0,
+		 		pointHitRadius: 10,
+		 		data: Util.ArrayBuilder(null).multiply(xNum)
+			});
+		}
+		var data = {
+		 	labels: Util.ArrayBuilder("").multiply(xNum),
+		 	datasets: datasets
+		};
+
 		var yMax = _option.yMax || 100;
 		var yMin = _option.yMin || 0;
 		var stepSize = _option.yStepSize || (yMax - yMin) / 10.0;
 
-		var dataRow = [], options;
-
-		ready().then(function(){
-		
-			var row1 = [{label: "time", id: "time"}];
-			
-			for (var i = 0; i< _datasets.length; i++) {
-				row1.push(_datasets[i]);
+		var option = {
+			showLines: true,
+			animation: false,
+			legend: {
+				display: false
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						max: yMax,
+						min: yMin,
+						stepSize: stepSize
+					},
+					gridLines: {
+						drawTicks: false
+					}
+				}],
+				xAxes: [{
+					gridLines: {
+						display: true,
+						drawTicks: false
+					},
+					ticks: {
+						fontSize: 10,
+						maxRotation: 10,
+						callback: function(value) {
+							if (value.toString().length > 0) {
+								return value;
+							} else {return null};
+						}
+					}
+				}]
 			}
-			
-			dataRow.push(row1);
-/*
-			for (var i = 0; i< _datasets.length; i++) {
-				row1.push(_datasets[i]);
-			}
-*/
-			var data = google.visualization.arrayToDataTable(dataRow);
-
-			options = {
-				hAxis: {
-					title: 'Time'
-				},
-				vAxis: {
-					title: _option.xTitle
-				},
-				 'width':400,
-                       'height':300
-      		};
-
-      		chart = new google.visualization.LineChart(ctx);
-
-      		_chart.draw = chart.draw;
-
-			chart.draw(data, options);
-
-		});
-		
-	
-		var counter = 0;
-
-		_chart.addData = function(values, label = ""){
-
-			ready().then(() => {
-				
-				counter ++;
-
-				var row = [counter.toString()];
-
-				for(var i=0; i<values.length; i++){
-					row.push(values[i]);
-			    }
-
-			    if(dataRow.length > xNum){
-
-				    var row1 = dataRow.shift()
-				    dataRow[0] = row1;
-				}
-				
-			    dataRow.push(row);
-
-			    var data = google.visualization.arrayToDataTable(dataRow);
-			  
-				//chart.draw(data, options);
-				//chart = new google.visualization.LineChart(ctx);
-				chart.draw(data, options);
-			});
-		 
-   		
 		};
 
-		_chart.stop = function(){
+		var chart = Chart.Line(ctx, {
+			data: data,
+			options: option
+		});
+
+		chart.addData = function(values, label = ""){
+			for(var i=0; i<values.length; i++){
+				this.data.datasets[i].data.shift();
+				this.data.datasets[i].data.push(values[i]);
+		    }
+
+			this.data.labels.shift();
+
+		    this.data.labels.push(label);
+		    this.update();
+		};
+
+		chart.stop = function(){
 			clearInterval(intervalId);
 		};
 
+		var counter = 0;
 		
-		_chart.start = function(getFunc, interval){
+		chart.start = function(getFunc, interval){
 			intervalId = setInterval(function(){
 				var label = "";
 				counter ++;
 				if((counter % (1000 / interval)) == 0){
 					label = counter * interval / 1000;
+					label = "asa";
 				}
 
-				_chart.addData(getFunc(), label);
+				chart.addData(getFunc(), label);
 			}, interval);
 		};
 
-		return _chart;
+		return chart;
 	}
 
 	return creators;
