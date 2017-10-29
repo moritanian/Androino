@@ -71,6 +71,10 @@ function Slam(mapContainer){
 
 	function update(rotation, depth, motorData, odometryData){
 
+	};
+
+	this.newRotation = function(rotation){
+		myEstRotation = rotation;
 	}
 
 	this.move = function(position, rotation){
@@ -81,6 +85,20 @@ function Slam(mapContainer){
 		if(this.mapView)
 			this.mapView.updateMine(myEstPosition, myEstRotation);
 
+	};
+
+	this.newOdometryData = function(odometryData){
+		myEstPosition.y +=  - odometryData.z * Math.sin(myEstRotation); //odometryData.x * Math.cos(myEstRotation);//
+		myEstPosition.x += + odometryData.z * Math.cos(myEstRotation); //odometryData.x * Math.sin(myEstRotation);// 
+		if(this.mapView)
+			this.mapView.updateMine(myEstPosition, myEstRotation);
+	};
+
+	this.getMyEstimatePosition = function(){
+		return {
+			x: myEstPosition.x,
+			y: myEstPosition.y
+		};
 	};
 
 }

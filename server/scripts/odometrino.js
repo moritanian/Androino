@@ -48,7 +48,8 @@ function Odometrino(){
 
 		_this.androidService.stopDeviceCamera();
 		$("#video").hide();
-		slam.mapView.clearPoints();
+		if(slam.mapView)
+			slam.mapView.clearPoints();
 
 		distanceSensor.measure()
 			.then(function(distance){
@@ -56,6 +57,8 @@ function Odometrino(){
 			}).catch(function(e){
 				console.warn(e);
 			});
+
+		_this.androidService.restartVisualOdometry();
 		
 	});
 
@@ -147,7 +150,7 @@ function Odometrino(){
 	this.androidService.initIMUListener();
 
 	_this.androidService.addDeviceOrientationListener(function(){
-		$sumRotText.text(_this.androidService.getSumRotation2D().toFixed(2));
+		$sumRotText.text(Util.radToDeg(_this.androidService.getSumRotation2D()).toFixed(2));
 	});
 
 	// slam
@@ -224,7 +227,7 @@ function Odometrino(){
 				// #TODO 制御
 				//_this.rotate(diffRad * ROTATE_SPEED_COEFF);
 				_this.rotate(10 );
-				console.log(diffRad * ROTATE_SPEED_COEFF);
+				//console.log(diffRad * ROTATE_SPEED_COEFF);
 
 			}
 
@@ -319,8 +322,14 @@ function Odometrino(){
 	*/
 
 	this.androidService.addVisualOdometryEventListener(function(event){
-		var pos = event.visualOdometryData;
-		slam.move({x: pos.x, y: pos.y},  _this.androidService.getSumRotation2D());
+		var deltaPos = event.visualOdometryData;
+
+		// デバイスの向きでかわるので注意
+		slam.newRotation( _this.androidService.getSumRotation2D());
+		slam.newOdometryData(deltaPos);
+		var pos = slam.getMyEstimatePosition();
+		stream.map([{x: pos.x, y:pos.y},  _this.androidService.getSumRotation2D()]);
+
 	});
 
 	this.props[MOVE_STATUS] = 4;

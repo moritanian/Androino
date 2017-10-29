@@ -123,11 +123,15 @@ $(function(){
 
    	stream.onMessage(stream.MESSAGE_TYPE.ERROR, function(e){
    		// TODO 送られてきたエラーが表示されるように
+   		console.log(e.message);
+   		console.log(e.file);
+   		console.log(e.line);
 		var err = new Error(e.message, e.file, e.line);
 		throw err;
    	});
 
    	stream.onMessage(stream.MESSAGE_TYPE.MAP, function(e){
+   		console.log(e);
 
    		if(e.mine){
 	

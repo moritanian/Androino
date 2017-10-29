@@ -36,7 +36,7 @@ function SlamView(container){
 		controls.target.set( 0,0,0);
 
 		// lights
-		scene.add( new THREE.AmbientLight( 0xcccccc ) );
+		scene.add( new THREE.AmbientLight( 0xeeeeee ) );
 
 		var light = new THREE.DirectionalLight( 0xffffbb, 1 );
 		light.position.set( - 1, 30, - 1 );
@@ -64,7 +64,7 @@ function SlamView(container){
 
 		var dir = new THREE.Vector3( 0, 0, 1 );
 		var origin = new THREE.Vector3( 0, 10 * scale, 80 * scale );
-		var length = 60 * scale;
+		var length = 120 * scale;
 		var arrowHelper = new THREE.ArrowHelper( dir, origin, length, 0xff0000);
 		mine.add( arrowHelper );
 		mine.position.set(0,50 * scale, 0);
@@ -127,7 +127,7 @@ function SlamView(container){
 
 		mine.rotation.set(0, rotation, 0);
 
-	}
+	};
 
 	SlamView.prototype.clearPoints = function(){
 		var len = points.children.length;

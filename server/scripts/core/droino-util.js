@@ -246,3 +246,7 @@ Util.stopwatch = (function() {
 
     return stopwatch;
 })();
+
+Util.isNativeEnv = function(){
+	return !(typeof(nativeInterface) === 'undefined');
+};

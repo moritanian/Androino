@@ -335,6 +335,8 @@ function AndroidService(){
 
 				rotation2D = Util.degToRad( heading + adjustment );
 
+
+
 				var diffRotation2d = rotation2D - lastRotation2d;
 
 				// -PI , PI border
@@ -359,8 +361,12 @@ function AndroidService(){
 				sumRotation2d = rotation2D + sumRotation2dUnit * 2.0 * Math.PI;
 				lastRotation2d = rotation2D;
 /*
-				console.log("rot " + rotation2D);
-				console.log("sum " + sumRotation2d);
+				if(Math.abs(diffRotation2d) > 0.5 ){
+					console.log("*************** jump **********" + diffRotation2d)
+				}
+				console.log("alp " + heading);
+				console.log("rot " + Util.radToDeg(rotation2D));
+				console.log("sum " + Util.radToDeg( sumRotation2d));
 */
 
 
@@ -509,6 +515,7 @@ function AndroidService(){
 		};
 
 		this.getSumRotation2D = function(){
+			// TODO 時間補正
 			return sumRotation2d;
 		};
 
@@ -543,6 +550,31 @@ function AndroidService(){
 				y: visualOdometryData.y,
 				z: visualOdometryData.z
 			};
+		};
+
+		this.initVisualOdometry = function(){
+			if(Util.isNativeEnv()){
+				nativeInterface.initVisualOdometry();
+			} else {
+				console.warn("Cannot call initVisualOdometry in the browser environment");
+			}
+		};
+
+		this.restartVisualOdometry = function(){
+			if(Util.isNativeEnv()){
+				nativeInterface.restartVisualOdometry();
+			} else {
+				console.warn("Cannot call restartVisualOdometry in the browser environment");
+			}
+		};
+
+
+		this.stopVisualOdometry = function(){
+			if(Util.isNativeEnv()){
+				nativeInterface.stopVisualOdometry();
+			} else {
+				console.warn("Cannot call stopVisualOdometry in the browser environment");
+			}
 		};
 
 		this.clearDevicePosition = function(){
@@ -610,6 +642,10 @@ function AndroidService(){
     				onMessage(message);
     			
     			}	
+    		});
+
+    		socket.on('join', function(message) {
+    			console.log("join");	
     		});
 
     		socket.on('disconnect', function() {
