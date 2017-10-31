@@ -6,15 +6,18 @@
 	pin6 motor2
 	pin9 motor2 
 */
-function Odometrino(){
+function Odometrino(WSUrl =  "http://localhost:3002/"){
+
 	// super constructer
-	DroinoBase.apply(this, arguments);
+	Odometrino.base(this, 'constructor', WSUrl);
 
-	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
+	var stream; 
+	
+	this.onReady = function(){
+		stream = new this.androidService.SocketStream(WSUrl);
 
-	var stream = new this.androidService.SocketStream(WSUrl);
-
-	stream.startStream();
+		stream.startStream();
+	}
 	
 	var MOTOR_L1_PIN = 3;
 	var MOTOR_L2_PIN = 5;
@@ -284,11 +287,11 @@ function Odometrino(){
 
 						var measureRotation = (measureStartRotation + measureEndRotation) / 2.0;
 
-						slam.move({x:0, y:0}, measureRotation);
+						slam.move({x:0, z:0}, measureRotation);
 
 						slam.addSeenPoint(distance);
 
-						stream.map([{x: 0, y:0}, measureRotation], distance);
+						stream.map([{x: 0, z:0}, measureRotation], distance);
 
 
 					}).catch(function(e){
@@ -328,7 +331,7 @@ function Odometrino(){
 		slam.newRotation( _this.androidService.getSumRotation2D());
 		slam.newOdometryData(deltaPos);
 		var pos = slam.getMyEstimatePosition();
-		stream.map([{x: pos.x, y:pos.y},  _this.androidService.getSumRotation2D()]);
+		stream.map([{x: pos.x, z:pos.z},  _this.androidService.getSumRotation2D()]);
 
 	});
 
@@ -336,5 +339,4 @@ function Odometrino(){
 
 }
 
-Odometrino.prototype = Object.create(DroinoBase.prototype);
-Odometrino.prototype.constructer = DroinoBase;
+Util.inherits(Odometrino, DroinoBase);

@@ -13,10 +13,11 @@ function UltrasonicDistanceSensor(arduino, opts){
 			function(){
 				//var distance = 4000 + Math.random() * 0; // [10um]
 				var rot = opts.androidService.getSumRotation2D();
+				var sensorRot = rot - Math.PI/ 2.0;
 				var true_distance = 500;
-				var x =  -200;
-				var y = 200;
-				var distance = (true_distance + x*Math.sin(rot) - y*Math.cos(rot))/Math.cos(rot);
+				var x = 60;
+				var z = 60;
+				var distance = (true_distance - x*Math.sin(rot) + z*Math.cos(rot))/Math.cos(sensorRot);
 				distance *=100;
 				distance += Math.random() * 20;
 				var result 

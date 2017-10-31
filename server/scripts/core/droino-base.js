@@ -1,8 +1,15 @@
-function DroinoBase(){
+function DroinoBase(WSUrl){
 	
 	var _this = this;
 	this.arduino = new Arduino();
 	this.androidService = new AndroidService();
+
+	if(WSUrl){
+		Util.loadScript(WSUrl + "socket.io/socket.io.js").then(() =>{
+			this.onReady();
+		});
+
+	}
 	
 	/*
 		props

@@ -37,12 +37,14 @@ function Slam(mapContainer){
 
 	var myEstPosition = {
 		x: 0,
-		y: 0
+		y: 0,
+		z: 0
 	};
 
 	var depthSensor = {
 		x: 0,
 		y: 0,
+		z: 0,
 		rot: 0
 	};
 
@@ -50,15 +52,16 @@ function Slam(mapContainer){
 
 
 	this.setDepthSensorLocation = function(pos, rot){
-		depthSensor.x = pos.x;
-		depthSensor.y = pos.y;
+		depthSensor.x = pos.x || 0;
+		depthSensor.y = pos.y || 0;
+		depthSensor.z = pos.z || 0;
 		depthSensor.rot = rot;
 	};
 
 	this.addSeenPoint = function(depth){
 		this.addPoint({
-			x: myEstPosition.x + Math.cos(myEstRotation) * depthSensor.x - Math.sin(myEstRotation) * depthSensor.y + depth * Math.cos(myEstRotation + depthSensor.rot), 
-			y: myEstPosition.y + Math.sin(myEstRotation) * depthSensor.x + Math.cos(myEstRotation) * depthSensor.y + depth *Math.sin(myEstRotation + depthSensor.rot)
+			x: myEstPosition.x + Math.cos(myEstRotation) * depthSensor.x + Math.sin(myEstRotation) * depthSensor.z - depth * Math.sin(myEstRotation + depthSensor.rot), 
+			z: myEstPosition.z - Math.sin(myEstRotation) * depthSensor.x + Math.cos(myEstRotation) * depthSensor.z - depth * Math.cos(myEstRotation + depthSensor.rot)
 		});
 	};
 
@@ -81,6 +84,7 @@ function Slam(mapContainer){
 
 		myEstPosition.x = position.x;
 		myEstPosition.y = position.y;
+		myEstPosition.z = position.z;
 		myEstRotation = rotation;
 		if(this.mapView)
 			this.mapView.updateMine(myEstPosition, myEstRotation);
@@ -88,8 +92,8 @@ function Slam(mapContainer){
 	};
 
 	this.newOdometryData = function(odometryData){
-		myEstPosition.y +=  - odometryData.z * Math.sin(myEstRotation); //odometryData.x * Math.cos(myEstRotation);//
-		myEstPosition.x += + odometryData.z * Math.cos(myEstRotation); //odometryData.x * Math.sin(myEstRotation);// 
+		myEstPosition.z +=   odometryData.z * Math.cos(myEstRotation); //odometryData.x * Math.cos(myEstRotation);//
+		myEstPosition.x += + odometryData.z * Math.sin(myEstRotation); //odometryData.x * Math.sin(myEstRotation);// 
 		if(this.mapView)
 			this.mapView.updateMine(myEstPosition, myEstRotation);
 	};
@@ -97,7 +101,8 @@ function Slam(mapContainer){
 	this.getMyEstimatePosition = function(){
 		return {
 			x: myEstPosition.x,
-			y: myEstPosition.y
+			y: myEstPosition.y,
+			z: myEstPosition.z
 		};
 	};
 

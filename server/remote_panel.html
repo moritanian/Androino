@@ -86,7 +86,8 @@
 <script type="text/javascript" src="./scripts/slam/slam.js"></script>  
 <script type="text/javascript" src="./scripts/slam/slam-view.js"></script>  
 
-<script src="https://rtc-world-s.herokuapp.com/socket.io/socket.io.js"></script> 
+<!--<script src="https://rtc-world-s.herokuapp.com/socket.io/socket.io.js"></script> -->
+<script src="http://localhost:3002/socket.io/socket.io.js"></script> 
 
 
 <script type="text/javascript">
@@ -98,8 +99,8 @@ $(function(){
 	// slam
 	var slam = new Slam($("#map-container").get(0));
 	slam.setDepthSensorLocation({
-		x:  -60,
-		y:  -60
+		x:  60,
+		z:  60
 	}, - Math.PI/ 2.0)
 
 	function animate(){
@@ -109,7 +110,8 @@ $(function(){
 	animate();
 
 
-	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
+	//var WSUrl =  "https://rtc-world-s.herokuapp.com/";
+	var WSUrl =  "http://localhost:3002/";
 
 	var stream = new service.SocketStream(WSUrl);
 
