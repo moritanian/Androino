@@ -1361,6 +1361,8 @@
 		}
 	};
 
+	math.Vector3 = Vector3;
+
 	/**
 	 * @author mrdoob / http://mrdoob.com/
 	 * @author WestLangley / http://github.com/WestLangley

@@ -292,92 +292,154 @@ function AndroidService(){
 
 		};
 
-		/*
-			Copyright © 2015 lamplightdev. All rights reserved.
-			https://github.com/lamplightdev/compass
-		*/
-		var onDeviceOrientationChangeEvent = function( event ) {
+		var onDeviceOrientationChangeEvent = (function() {
 
-			deviceOrientation = event;
-		
-			var heading = event.alpha;
+			var RIGHT = new math.Vector3(1.0, 0 ,0);
+			var UP = new math.Vector3(0, 1.0 ,0);
+			var FORWARD = new math.Vector3(0, 0 ,1.0);
 
-		    if (typeof event.webkitCompassHeading !== "undefined") {
-		     	heading = event.webkitCompassHeading; //iOS non-standard
-		    }
+			var ROOT1_2 = 1.0 / Math.sqrt(2.0);
 
-		    var bOrientation = getBrowserOrientation();
+			var getDeviceEuler, deviceEuler, heading;
 
-		    if (typeof heading !== "undefined" && heading !== null) { // && typeof orientation !== "undefined") {
-		      // we have a browser that reports device heading and orientation
+			var userAgent = window.navigator.userAgent.toLowerCase();
 
-		    	// what adjustment we have to add to rotation to allow for current device orientation
-		      	var adjustment = 0;
-		      	if (defaultOrientation === "landscape") {
-		        	adjustment -= 90;
-		      	}
+			if(userAgent.indexOf('android') == -1 && userAgent.indexOf('chrome') != -1){
+				
+				// chrome のsensorデバッグのorientation が標準と違う
+				
+				getDeviceEuler = function(event){
+					
+					order = "ZYX";
 
-		      	if (typeof bOrientation !== "undefined") {
-		        	var currentOrientation = bOrientation.split("-");
+					deviceEuler = new math.Euler(
+						Util.degToRad(event.beta), 
+						Util.degToRad(event.gamma), 
+						Util.degToRad(event.alpha),
+						order);					
 
-		        	if (defaultOrientation !== currentOrientation[0]) {
-		          		if (defaultOrientation === "landscape") {
-		            		adjustment -= 270;
-			          	} else {
-			            	adjustment -= 90;
-			          	}
-			        }
+					return deviceEuler;
 
-			        if (currentOrientation[1] === "secondary") {
-			        	adjustment -= 180;
-			        }
-			    }
+				};
 
-				rotation2D = Util.degToRad( heading + adjustment );
+			} else {
+				
+				getDeviceEuler = function(event){
+					
+					order = "ZXY";
 
+					deviceEuler = new math.Euler(
+						Util.degToRad( event.beta),
+						Util.degToRad( event.gamma),
+						Util.degToRad( event.alpha),
+						order);
+					
 
+					return deviceEuler;
 
-				var diffRotation2d = rotation2D - lastRotation2d;
-
-				// -PI , PI border
-				if(diffRotation2d > Math.PI){ // -direction , -PI -> +PI
-
-					if(diffRotation2d > 2.0 * Math.PI){
-						log.warn("diffRotation2d is invalid. "  + diffRotation2d);
-					}
-
-					sumRotation2dUnit --;
-
-				} else if(diffRotation2d < - Math.PI){ // + direction , +PI -> -PI
-			
-					if(diffRotation2d < - 2.0 * Math.PI){
-						log.warn("diffRotation2d is invalid. "  + diffRotation2d);
-					}
-
-					sumRotation2dUnit ++;
-
-				}
-
-				sumRotation2d = rotation2D + sumRotation2dUnit * 2.0 * Math.PI;
-				lastRotation2d = rotation2D;
-/*
-				if(Math.abs(diffRotation2d) > 0.5 ){
-					console.log("*************** jump **********" + diffRotation2d)
-				}
-				console.log("alp " + heading);
-				console.log("rot " + Util.radToDeg(rotation2D));
-				console.log("sum " + Util.radToDeg( sumRotation2d));
-*/
-
-
+				};
 			}
 
-			IMUDispatcher.dispatchEvent({
-				type: DEVICE_ORIENTATION_EVENT,
-				deviceOrientation: deviceOrientation
-			});
+			var onDeviceOrientationChangeEvent = function( event ) {
 
-	    };
+				deviceOrientation = event;
+
+				deviceEuler = getDeviceEuler(deviceOrientation);
+
+				var right = RIGHT.clone();
+				var up = UP.clone();
+				var forward = FORWARD.clone()
+					
+				right.applyEuler(deviceEuler);
+				up.applyEuler(deviceEuler);
+				forward.applyEuler(deviceEuler);
+				
+
+				
+				// 対象の二次元平面回転の軸方向に極がこないようにreorder
+				if(right.z > ROOT1_2 || right.z < - ROOT1_2){
+
+					heading = Math.atan2(forward.y, forward.x);
+
+				} else if( up.z > ROOT1_2 || up.z < -ROOT1_2){
+
+					heading = Math.atan2(right.y, right.x);
+
+				} else {
+
+					heading = Math.atan2(right.y, right.x);
+
+				}
+
+
+				console.log(heading);
+
+			    var bOrientation = getBrowserOrientation();
+
+			    if (typeof heading !== "undefined" && heading !== null) { // && typeof orientation !== "undefined") {
+			      // we have a browser that reports device heading and orientation
+
+			    	// what adjustment we have to add to rotation to allow for current device orientation
+			      	var adjustment = 0;
+			      	if (defaultOrientation === "landscape") {
+			        	adjustment -= Math.PI/2.0;
+			      	}
+
+			      	if (typeof bOrientation !== "undefined") {
+			        	var currentOrientation = bOrientation.split("-");
+
+			        	if (defaultOrientation !== currentOrientation[0]) {
+			          		if (defaultOrientation === "landscape") {
+			            		adjustment -= Math.PI * 1.5;
+				          	} else {
+				            	adjustment -= Math.PI * 0.5;
+				          	}
+				        }
+
+				        if (currentOrientation[1] === "secondary") {
+				        	adjustment -= Math.PI;
+				        }
+				    }
+
+					rotation2D = heading + adjustment;
+
+
+
+					var diffRotation2d = rotation2D - lastRotation2d;
+
+					// -PI , PI border
+					if(diffRotation2d > Math.PI){ // -direction , -PI -> +PI
+
+						if(diffRotation2d > 2.0 * Math.PI){
+							log.warn("diffRotation2d is invalid. "  + diffRotation2d);
+						}
+
+						sumRotation2dUnit --;
+
+					} else if(diffRotation2d < - Math.PI){ // + direction , +PI -> -PI
+				
+						if(diffRotation2d < - 2.0 * Math.PI){
+							log.warn("diffRotation2d is invalid. "  + diffRotation2d);
+						}
+
+						sumRotation2dUnit ++;
+
+					}
+
+					sumRotation2d = rotation2D + sumRotation2dUnit * 2.0 * Math.PI;
+					lastRotation2d = rotation2D;
+
+				}
+
+				IMUDispatcher.dispatchEvent({
+					type: DEVICE_ORIENTATION_EVENT,
+					deviceOrientation: deviceOrientation
+				});
+
+		    };
+
+		    return onDeviceOrientationChangeEvent;
+		})();
 
 	    var onScreenOrientationChangeEvent = function() {
 
