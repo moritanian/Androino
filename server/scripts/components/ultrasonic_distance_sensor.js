@@ -8,11 +8,15 @@ function UltrasonicDistanceSensor(arduino, opts){
 
 	// dummy func
 	if(this.arduino.isSimulation){
+
+		var androidService = new AndroidService();
+
 		this.arduino.appendDummySendSysex(
+			
 			UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_REQUEST_COMMAND,
 			function(){
 				//var distance = 4000 + Math.random() * 0; // [10um]
-				var rot = opts.androidService.getSumRotation2D();
+				var rot = androidService.getSumRotation2D();
 				var sensorRot = rot - Math.PI/ 2.0;
 				var true_distance = 500;
 				var x = 60;
