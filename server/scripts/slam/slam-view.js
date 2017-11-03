@@ -97,13 +97,12 @@ function SlamView(container){
 
 	initScene();
 
-	function createPointObj(position){
-		
-		var geometry = new THREE.SphereGeometry( 5 * scale, 3.2 * scale, 3.2* scale );
-		var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+	function createPointObj(position, r = 100){
+		var geometry = new THREE.SphereGeometry( 5 * scale, 0.32, 0.32 );
+		var green = Math.floor(Math.max(Math.min(255, 100000/r), 20));
+		var material = new THREE.MeshBasicMaterial( {color: 0x000100 * green}  );
 		var sphere = new THREE.Mesh( geometry, material );
 		sphere.position.set(position.x * scale , 50.0 * scale, position.z * scale);
-		//sphere.scale.set(0.1, .1, .1);
 		return sphere;
 		/*
 		var geometry = new THREE.BoxGeometry( 200, 2, 2 );
@@ -123,9 +122,9 @@ function SlamView(container){
 
 	};
 
-	SlamView.prototype.addPoint = function(position){
+	SlamView.prototype.addPoint = function(position, r){
 		
-		points.add(createPointObj(position));
+		points.add(createPointObj(position, r));
 
 	};
 

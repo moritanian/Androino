@@ -420,7 +420,7 @@ var AndroidService = (function(){
 						if(diffRotation2d > Math.PI){ // -direction , -PI -> +PI
 
 							if(diffRotation2d > 2.0 * Math.PI){
-								log.warn("diffRotation2d is invalid. "  + diffRotation2d);
+								console.warn("diffRotation2d is invalid. "  + diffRotation2d);
 							}
 
 							sumRotation2dUnit --;
@@ -428,7 +428,7 @@ var AndroidService = (function(){
 						} else if(diffRotation2d < - Math.PI){ // + direction , +PI -> -PI
 					
 							if(diffRotation2d < - 2.0 * Math.PI){
-								log.warn("diffRotation2d is invalid. "  + diffRotation2d);
+								console.warn("diffRotation2d is invalid. "  + diffRotation2d);
 							}
 
 							sumRotation2dUnit ++;
@@ -861,11 +861,12 @@ var AndroidService = (function(){
 					});
 				};
 
-				this.map = function(mine, distance){
+				this.map = function(data){
 					this.postMessage({
 						type: MESSAGE_TYPE.MAP,
-						mine: mine,
-						distance: distance
+						position: data.position,
+						rotation: data.rotation,
+						distance: data.distance
 					});
 				};
 

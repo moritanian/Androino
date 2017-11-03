@@ -62,13 +62,13 @@ function Slam(mapContainer){
 		this.addPoint({
 			x: myEstPosition.x + Math.cos(myEstRotation) * depthSensor.x + Math.sin(myEstRotation) * depthSensor.z - depth * Math.sin(myEstRotation + depthSensor.rot), 
 			z: myEstPosition.z - Math.sin(myEstRotation) * depthSensor.x + Math.cos(myEstRotation) * depthSensor.z - depth * Math.cos(myEstRotation + depthSensor.rot)
-		});
+		}, depth);
 	};
 
-	this.addPoint = function(position){
+	this.addPoint = function(position, r){
 
 		if(this.mapView)
-			this.mapView.addPoint(position);
+			this.mapView.addPoint(position, r);
 		
 	};
 
@@ -78,13 +78,18 @@ function Slam(mapContainer){
 
 	this.newRotation = function(rotation){
 		myEstRotation = rotation;
-	}
+	};
 
-	this.move = function(position, rotation){
-
+	this.setMyPosition = function(position){
 		myEstPosition.x = position.x;
 		myEstPosition.y = position.y;
 		myEstPosition.z = position.z;
+		if(this.mapView)
+			this.mapView.updateMine(myEstPosition, myEstRotation);
+	};
+
+	this.setRotation = function(rotation){
+		
 		myEstRotation = rotation;
 		if(this.mapView)
 			this.mapView.updateMine(myEstPosition, myEstRotation);
@@ -105,5 +110,16 @@ function Slam(mapContainer){
 			z: myEstPosition.z
 		};
 	};
+
+	this.reset = function(){
+
+		myEstPosition.x = 0;
+		myEstPosition.y = 0;
+		myEstPosition.z = 0;
+		
+		if(this.mapView){
+			this.mapView.clearPoints();
+		}
+	}
 
 }

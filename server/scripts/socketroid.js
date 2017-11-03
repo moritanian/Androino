@@ -9,19 +9,28 @@
 function Socketroid(){
 	DroinoBase.apply(this, arguments);
 
-	var MOTOR_L1_PIN = 3;
-	var MOTOR_L2_PIN = 5;
-	var MOTOR_R1_PIN = 6;
-	var MOTOR_R2_PIN = 9;
+	var MOTOR_L1_PIN = 5;
+	var MOTOR_L2_PIN = 3;
+	var MOTOR_R1_PIN = 9;
+	var MOTOR_R2_PIN = 6;
 	var LED1_PIN = 4;
 
 	var _this = this;
 
-	/* initialization */
-	this.arduino.pinMode(MOTOR_L1_PIN, Arduino.PWM);
-	this.arduino.pinMode(MOTOR_L2_PIN, Arduino.PWM);
-	this.arduino.pinMode(MOTOR_R1_PIN, Arduino.PWM);
-	this.arduino.pinMode(MOTOR_R2_PIN, Arduino.PWM);
+	const offset = 110;
+
+	var motorRight = new Motor(this.arduino, {
+		pin1: MOTOR_R1_PIN,
+		pin2: MOTOR_R2_PIN,
+		offset: offset
+	});
+
+	var motorLeft = new Motor(this.arduino, {
+		pin1: MOTOR_L1_PIN,
+		pin2: MOTOR_L2_PIN,
+		offset: offset
+	});
+
 
 	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
 	var WSRoomName = "androino-socketroid";
@@ -38,39 +47,19 @@ function Socketroid(){
 
 			}
 
-			var motorLeft = message.control.motorLeft;
+			var leftValue = message.control.motorLeft;
 
-			if(motorLeft != null){
+			if(leftValue != null){
 
-				if(motorLeft < 0){
-
-					_this.arduino.analogWrite(MOTOR_L1_PIN, - motorLeft);
-					_this.arduino.analogWrite(MOTOR_L2_PIN, 0);
-
-				} else {
-					
-					_this.arduino.analogWrite(MOTOR_L2_PIN, motorLeft);
-					_this.arduino.analogWrite(MOTOR_L1_PIN, 0);					
-				
-				}
+				motorLeft.speed(leftValue)		
 
 			}
 
-			var motorRight = message.control.motorRight;
+			var rightValue = message.control.motorRight;
 
-			if(motorRight != null){
+			if(rightValue != null){
 
-				if(motorRight < 0){
-
-					_this.arduino.analogWrite(MOTOR_R1_PIN, - motorRight);
-					_this.arduino.analogWrite(MOTOR_R2_PIN, 0);
-
-				} else {
-					
-					_this.arduino.analogWrite(MOTOR_R2_PIN, motorRight);
-					_this.arduino.analogWrite(MOTOR_R1_PIN, 0);					
-				
-				}
+				motorRight.speed(rightValue);
 
 			}
 

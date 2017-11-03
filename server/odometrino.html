@@ -78,7 +78,7 @@
 <!--
 <script type="text/javascript" src="./scripts/libs/Chart.bundle.min.js"></script>
 -->
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<!--<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> -->
 
 <script type="text/javascript" src="./scripts/core/arduino.js"></script>
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
@@ -102,7 +102,8 @@
 <script type="text/javascript">
 'use strict';
 $(function(){
-   var odometrino = new Odometrino();
+	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
+   	var odometrino = new Odometrino(WSUrl);
 });
         
 </script>

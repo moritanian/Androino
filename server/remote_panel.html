@@ -68,10 +68,8 @@
 
 <script type="text/javascript" src="./scripts/libs/jsfeat-min.js"></script>
 
-<!--
 <script type="text/javascript" src="./scripts/libs/math.min.js"></script>
 <script type="text/javascript" src="./scripts/libs/math-extension.js"></script>
--->
 
 <script type="text/javascript" src="./scripts/libs/three.min.js"></script>
 <script type="text/javascript" src="./scripts/libs/OrbitControls.js"></script>
@@ -86,8 +84,8 @@
 <script type="text/javascript" src="./scripts/slam/slam.js"></script>  
 <script type="text/javascript" src="./scripts/slam/slam-view.js"></script>  
 
-<!--<script src="https://rtc-world-s.herokuapp.com/socket.io/socket.io.js"></script> -->
-<script src="http://localhost:3002/socket.io/socket.io.js"></script> 
+<script src="https://rtc-world-s.herokuapp.com/socket.io/socket.io.js"></script> 
+<!--<script src="http://localhost:3002/socket.io/socket.io.js"></script> -->
 
 
 <script type="text/javascript">
@@ -110,8 +108,8 @@ $(function(){
 	animate();
 
 
-	//var WSUrl =  "https://rtc-world-s.herokuapp.com/";
-	var WSUrl =  "http://localhost:3002/";
+	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
+	//var WSUrl =  "http://localhost:3002/";
 
 	var stream = new service.SocketStream(WSUrl);
 
@@ -133,11 +131,17 @@ $(function(){
    	});
 
    	stream.onMessage(stream.MESSAGE_TYPE.MAP, function(e){
-   		console.log(e);
+   		//console.log(e);
 
-   		if(e.mine){
+   		if(e.position){
 	
-	   		slam.move(e.mine[0], e.mine[1]);
+	   		slam.setMyPosition(e.position);
+
+   		}
+
+   		if(e.rotation){
+
+   			slam.setRotation(e.rotation);
 
    		}
 
@@ -153,7 +157,7 @@ $(function(){
 
 	var $resetButton = $("#reset-button");
 	$resetButton.click(function(){
-		slam.mapView.clearPoints();		
+		slam.reset();		
 	});
 
 });
