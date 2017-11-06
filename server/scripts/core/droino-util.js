@@ -280,3 +280,155 @@ Util.sleep = function(time) {
    		}, time);
   	});
 };
+
+Util.ArrayBuilder = function(value){
+	var funcs = {
+		multiply: function(num){
+			var arr = [];
+			if(num.constructor.name != "Number" || num < 0){
+				console.warn("ArrayBuilder: multiply num is invalid: " + num.constructor.name);
+				return;
+			}
+			for(var i=0; i<num; i++){
+				arr.push(value);
+			}
+			return arr;
+		}
+	};
+
+	return funcs;
+};
+
+/* 
+	chart.js wrapper 
+	real time chart for sensor values
+*/
+Util.ChartBuilder = (function(){
+	
+	var creators = {};
+
+	colors = [
+		"rgba(250, 10, 10, 1)",
+		"rgba(10, 250, 10, 1)",
+		"rgba(10, 10, 250, 1)",
+		"rgba(192, 192, 75, 1)",
+		"rgba(75, 192, 192, 1)",
+		"rgba(192, 192, 75, 1)",
+	];
+
+	creators.createLineChart = function(ctx, _datasets, _option = {}){
+		
+		var intervalId;
+		var datasets = [];
+		var xNum = _option.xNum || 100;
+		console.log(_datasets.length);
+		for(var i=0; i< _datasets.length; i++){
+			datasets.push({
+				label: _datasets[i].label,
+				fill: false,
+		 		lineTension: 0.2,
+		 		backgroundColor: "rgba(75,192,192,0.4)",
+		 		borderColor: colors[i],
+		 		borderCapStyle: 'butt',
+		 		borderDash: [],
+		 		borderDashOffset: 0.0,
+		 		borderWidth: 1,
+		 		borderJoinStyle: 'miter',
+		 		pointBorderColor: colors[i],
+		 		pointBackgroundColor: "#fff",
+		 		pointBorderWidth: 1,
+		 		pointHoverRadius: 5,
+		 		pointHoverBackgroundColor: colors[i],
+		 		pointHoverBorderColor: "rgba(220,220,220,1)",
+		 		pointHoverBorderWidth: 2,
+		 		pointRadius: 0,
+		 		pointHitRadius: 10,
+		 		data: Util.ArrayBuilder(null).multiply(xNum)
+			});
+		}
+		var data = {
+		 	labels: Util.ArrayBuilder("").multiply(xNum),
+		 	datasets: datasets
+		};
+
+		var yMax = _option.yMax || 100;
+		var yMin = _option.yMin || 0;
+		var stepSize = _option.yStepSize || (yMax - yMin) / 10.0;
+
+		var option = {
+			showLines: true,
+			animation: false,
+			legend: {
+				display: false
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						max: yMax,
+						min: yMin,
+						stepSize: stepSize
+					},
+					gridLines: {
+						drawTicks: false
+					}
+				}],
+				xAxes: [{
+					gridLines: {
+						display: true,
+						drawTicks: false
+					},
+					ticks: {
+						fontSize: 10,
+						maxRotation: 10,
+						callback: function(value) {
+							if (value.toString().length > 0) {
+								return value;
+							} else {return null};
+						}
+					}
+				}]
+			}
+		};
+
+		var chart = Chart.Line(ctx, {
+			data: data,
+			options: option
+		});
+
+		chart.addData = function(values, label = ""){
+			for(var i=0; i<values.length; i++){
+				this.data.datasets[i].data.shift();
+				this.data.datasets[i].data.push(values[i]);
+		    }
+
+			this.data.labels.shift();
+
+		    this.data.labels.push(label);
+		    this.update();
+		};
+
+		chart.stop = function(){
+			clearInterval(intervalId);
+		};
+
+		var counter = 0;
+		
+		chart.start = function(getFunc, interval){
+			intervalId = setInterval(function(){
+				var label = "";
+				counter ++;
+				if((counter % (1000 / interval)) == 0){
+					label = counter * interval / 1000;
+					label = "asa";
+				}
+
+				chart.addData(getFunc(), label);
+			}, interval);
+		};
+
+		return chart;
+	}
+
+	return creators;
+
+})();
