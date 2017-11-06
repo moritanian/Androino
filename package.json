@@ -1,0 +1,18 @@
+{
+  "name": "Androino",
+  "version": "0.1.0",
+  "description": "robot framework js library",
+  "main": "./src/index.js",
+  "directories": {
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-util": "^3.0.7",
+    "socket.io": "^1.2.0"
+  },
+  "scripts": {
+    "setup": "npm i -g gulp-cli"
+  },
+  "author": "moritanian",
+  "license": "MIT"
+}
