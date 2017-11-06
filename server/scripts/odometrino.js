@@ -19,10 +19,10 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 		stream.startStream();
 	}
 	
-	var MOTOR_L1_PIN = 3;
-	var MOTOR_L2_PIN = 5;
-	var MOTOR_R1_PIN = 6;
-	var MOTOR_R2_PIN = 9;
+	var MOTOR_L1_PIN = 5;
+	var MOTOR_L2_PIN = 3;
+	var MOTOR_R1_PIN = 9;
+	var MOTOR_R2_PIN = 6;
 	var LED1_PIN = 4;
 
 	var US_DISTANCE_TRIG_PIN = 7;
@@ -98,7 +98,7 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 		片側で 120
 		両輪で 95
 	*/
-	const offset = 100;
+	const offset = 110;
 
 	var motorRight = new Motor(this.arduino, {
 		pin1: MOTOR_R1_PIN,
@@ -116,15 +116,14 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 		this.arduino,
 		{
 			trigPin: US_DISTANCE_TRIG_PIN,
-			echoPin: US_DISTANCE_ECHO_PIN,
-			androidService: this.androidService
+			echoPin: US_DISTANCE_ECHO_PIN
 		});
 
 	// arduino functions
-	this.goStraight = function(){
+	this.goStraight = function(value = 255){
 		console.log('goStraight');
-		motorRight.forward(255);
-		motorLeft.forward(255);
+		motorRight.forward(value);
+		motorLeft.forward(value);
 	}
 
 	this.turnRight = function(){
@@ -140,8 +139,8 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 	}
 
 	this.rotate = function(sp){
-		motorRight.speed(-sp);
-		motorLeft.speed(sp);
+		motorRight.speed(sp);
+		motorLeft.speed(-sp);
 	}
 	this.stop = function(){
 		motorRight.stop();
@@ -229,7 +228,7 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 
 				// #TODO 制御
 				//_this.rotate(diffRad * ROTATE_SPEED_COEFF);
-				_this.rotate(10 );
+				_this.rotate(1.0 * diffRad /Math.abs(diffRad) );
 				//console.log(diffRad * ROTATE_SPEED_COEFF);
 
 			}
@@ -240,6 +239,8 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 	};
 
 	this.addProp(MOVE_STATUS);
+
+	var isGoStraight = false;
 
 	this.setPropsChangeListener(function(){
 
@@ -261,12 +262,6 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 			_this.delayChangeProp(800, MOVE_STATUS, 0);
 			
 		} else if(_this.props[MOVE_STATUS] == STATUS_ROTATING){
-			
-			rotDir = -rotDir;
-
-			_this.rotateDeg(360 * rotDir).then(function(){
-				_this.props[MOVE_STATUS] = STATUS_ROTATE_FIN;
-			});
 
 			function measureExec(){
 				
@@ -287,19 +282,56 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 
 						var measureRotation = (measureStartRotation + measureEndRotation) / 2.0;
 
-						slam.move({x:0, z:0}, measureRotation);
+						slam.setRotation(measureRotation);
 
 						slam.addSeenPoint(distance);
+/*
+						if(isGoStraight){
+							slam.newOdometryData({
+								x: 0,
+								y: 0,
+								z: -0
+							});
+						} else {
 
-						stream.map([{x: 0, z:0}, measureRotation], distance);
+						}
+*/
+						stream.map({
+							rotation: measureRotation,
+							distance: distance});
 
 
 					}).catch(function(e){
-						console.warn(e);
+						stream.error(e);
+						console.error(e);
 					});
 			}
 
 			measureExec();
+
+			rotDir = -rotDir;
+
+			(async function() { 
+		
+				while(true){
+					await _this.rotateDeg(360 * rotDir);
+					
+					_this.stop();
+					await _this.sleep(100);
+					
+					isGoStraight = true;
+					_this.goStraight(1);
+					await _this.sleep(2000);
+
+					_this.stop();
+					await _this.sleep(100);
+
+					isGoStraight = false;
+
+					rotDir = -rotDir;
+				}
+			
+			}).call(this);
 
 		}
 	});
@@ -325,13 +357,22 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 	*/
 
 	this.androidService.addVisualOdometryEventListener(function(event){
-		var deltaPos = event.visualOdometryData;
-
+		var odometryData = event.visualOdometryData;
+/*
+		if(!isGoStraight){
+			return;
+		}
+*/
 		// デバイスの向きでかわるので注意
 		slam.newRotation( _this.androidService.getSumRotation2D());
-		slam.newOdometryData(deltaPos);
+		slam.newOdometryData(odometryData);
 		var pos = slam.getMyEstimatePosition();
-		stream.map([{x: pos.x, z:pos.z},  _this.androidService.getSumRotation2D()]);
+		if(stream){
+			stream.map({
+				position:{x: pos.x, z:pos.z},
+			  	rotation: _this.androidService.getSumRotation2D()
+			  });
+		}
 
 	});
 

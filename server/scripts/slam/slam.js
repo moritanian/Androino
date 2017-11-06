@@ -35,11 +35,14 @@ function Slam(mapContainer){
 		this.mapView = new SlamView(mapContainer);
 	}
 
+/*
 	var myEstPosition = {
 		x: 0,
 		y: 0,
 		z: 0
 	};
+*/
+	var myEstPosition = new math.Vector3();
 
 	var depthSensor = {
 		x: 0,
@@ -49,7 +52,16 @@ function Slam(mapContainer){
 	};
 
 	var myEstRotation = 0;
+	var odometryBasePosition;
 
+	var _motorR, _motorL;
+
+	var AXIS_Y = new math.Vector3(0, 1.0, 0);
+
+	this.setMotors = function(motorR, motorL){
+		_motorR = motorR;
+		_motorL = motorL;
+	};
 
 	this.setDepthSensorLocation = function(pos, rot){
 		depthSensor.x = pos.x || 0;
@@ -97,8 +109,30 @@ function Slam(mapContainer){
 	};
 
 	this.newOdometryData = function(odometryData){
-		myEstPosition.z +=   odometryData.z * Math.cos(myEstRotation); //odometryData.x * Math.cos(myEstRotation);//
-		myEstPosition.x += + odometryData.z * Math.sin(myEstRotation); //odometryData.x * Math.sin(myEstRotation);// 
+		
+		var odometryPos = new math.Vector3(
+			- odometryData.x,
+			- odometryData.y,
+			- odometryData.z	
+		);
+
+		// 初期化
+		if(odometryData.w == 1 || odometryBasePosition == null){
+			console.warn("restart!!");
+
+			var wOdometryPos = odometryPos.applyAxisAngle(AXIS_Y, myEstRotation);
+			odometryBasePosition = myEstPosition.clone().add(wOdometryPos);
+
+			return;
+		}
+
+		console.log(odometryPos.x + " : " + odometryPos.y + " : " + odometryPos.z);
+
+
+		var wOdometryPos = odometryPos.applyAxisAngle(AXIS_Y, myEstRotation);
+		myEstPosition = odometryBasePosition.clone().sub(wOdometryPos);
+
+
 		if(this.mapView)
 			this.mapView.updateMine(myEstPosition, myEstRotation);
 	};

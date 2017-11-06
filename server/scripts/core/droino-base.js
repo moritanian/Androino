@@ -141,7 +141,7 @@ function DroinoBase(WSUrl){
 	      		resolve();
 	   		}, time);
 	  	});
-	}
+	};
 
 	/*
 	this.Asyncable = (function(){

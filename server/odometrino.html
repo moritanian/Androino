@@ -91,6 +91,8 @@
 <script type="text/javascript" src="./scripts/odometrino.js"></script>  
 <script type="text/javascript" src="./scripts/slam/slam.js"></script>  
 <script type="text/javascript" src="./scripts/slam/slam-view.js"></script>  
+
+<script type="text/javascript" src="./scripts/core/calibration.js"></script>  
 <!--<script type="text/javascript" src="./scripts/async-droino.js"></script> --> 
 <!--<script type="text/javascript" src="./scripts/queue-droino.js"></script> -->
 
@@ -148,13 +150,16 @@ $(function(){
 						distance
 					</td>
 					<td id="distance-value" class="value-text">-</td>
-					<td>
+					<td >
+						<button id="calibration-button">
+							calibration
+						</button>
 						
 					</td>
 					<td></td>
 
 				</tr>
-
+<!--
 				<tr>
 					<td class="td-title"> acceleration </td>
 					<td id="accX-text" class="value-text"></td>
@@ -174,6 +179,7 @@ $(function(){
 					<td id="posY-text" class="value-text"></td>
 					<td id="posZ-text" class="value-text"></td>
 				</tr>
+			-->
 			</table>
 		</li>
 		<li>

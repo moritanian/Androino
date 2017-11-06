@@ -272,3 +272,11 @@ Util.loadScript = function(url){
 	  document.getElementsByTagName('head')[0].appendChild(script);
 	});
 };
+
+Util.sleep = function(time) {
+  	return new Promise(resolve => { 
+    	setTimeout(() => { 
+      		resolve();
+   		}, time);
+  	});
+};

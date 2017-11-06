@@ -220,6 +220,7 @@ var AndroidService = (function(){
 			var sumRotation2dUnit = 0; // +PI -PI 超えるごとに増減
 			var sumRotation2d = 0; 
 			var sumRotation2dDestination = 0; 
+			var rotation2dSpeed = 0;
 
 			var defaultOrientation = screen.width > screen.height ? "landscape" : "portrait";
 
@@ -293,6 +294,7 @@ var AndroidService = (function(){
 				visualOdometryData.x = event.x;
 				visualOdometryData.y = event.y;
 				visualOdometryData.z = event.z;
+				visualOdometryData.w = event.w;
 				
 				IMUDispatcher.dispatchEvent({
 					type: VISUAL_ODOMETRY_EVENT,
@@ -310,6 +312,8 @@ var AndroidService = (function(){
 				var ROOT1_2 = 1.0 / Math.sqrt(2.0);
 
 				var getDeviceEuler, deviceEuler, heading;
+
+				var deltaTime, orientationTimeWatch;
 
 				var userAgent = window.navigator.userAgent.toLowerCase();
 
@@ -352,6 +356,13 @@ var AndroidService = (function(){
 				var onDeviceOrientationChangeEvent = function( event ) {
 
 					deviceOrientation = event;
+
+					if(orientationTimeWatch){
+						deltaTime = orientationTimeWatch.get_and_start();
+					} else {
+						orientationTimeWatch = new Util.stopwatch();
+						deltaTime = 0;
+					}
 
 					deviceEuler = getDeviceEuler(deviceOrientation);
 
@@ -436,6 +447,19 @@ var AndroidService = (function(){
 						}
 
 						sumRotation2d = rotation2D + sumRotation2dUnit * 2.0 * Math.PI;
+						
+
+						// rotationSpeed
+						if(deltaTime > 0){
+							var rotationCoeff = 0.2;
+
+							rotation2dSpeed = rotation2dSpeed * rotationCoeff + 
+								(lastRotation2d - rotation2D) * (1.0 - rotationCoeff) / deltaTime;
+
+							//console.log(rotation2dSpeed);
+
+						}
+
 						lastRotation2d = rotation2D;
 
 					}
@@ -599,6 +623,10 @@ var AndroidService = (function(){
 				return sumRotation2dDestination - sumRotation2d;
 			};
 
+			this.getRotation2DSpeed = function(){
+				return rotation2dSpeed;
+			};
+
 			this.getDeviceVelocity = function(){
 				return {
 					x: motionData.vel.x,
@@ -619,7 +647,8 @@ var AndroidService = (function(){
 				return {
 					x: visualOdometryData.x,
 					y: visualOdometryData.y,
-					z: visualOdometryData.z
+					z: visualOdometryData.z,
+					w: visualOdometryData.w
 				};
 			};
 
@@ -760,7 +789,8 @@ var AndroidService = (function(){
 				WARN: 2,
 				ERROR: 3,
 				MAP: 4,
-				ARDUINO: 5
+				ARDUINO: 5,
+				CALIBRATION: 6
 			};
 
 			function StreamBase(){
@@ -867,6 +897,13 @@ var AndroidService = (function(){
 						position: data.position,
 						rotation: data.rotation,
 						distance: data.distance
+					});
+				};
+
+				this.calibration = function(data){
+					this.postMessage({
+						type: MESSAGE_TYPE.CALIBRATION,
+						data: data
 					});
 				};
 
