@@ -383,18 +383,26 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 	var ctx = document.getElementById('myChart').getContext('2d');
 	var chart = Util.ChartBuilder.createLineChart(ctx,
 		[{label: "alpha"}, {label: "beta"}, {label: "gamma"}], 
-		{yMax: 180, yMin: -180, xNum: 60});
-
+		{yMax: 180, yMin: -180, xNum: 100, yLabel: "radian"});
+/*
 	chart.start(function(){
 			var o = _this.androidService.getDeviceOrientation();
 			return [o.alpha, o.beta, o.gamma];
 		},
 		100,);
-	/*
+		*/
+	
+	var w = new Util.stopwatch();
+	w.start();
 	_this.androidService.addDeviceOrientationListener(function(event){
-		chart.addData([event.deviceOrientation.alpha, event.deviceOrientation.beta, event.deviceOrientation.gamma]);
+		chart.addData([
+			//event.deviceOrientation.alpha, 
+			_this.androidService.getSumRotation2D(), 
+			event.deviceOrientation.beta, 
+			event.deviceOrientation.gamma],
+			w.get() / 1000.0
+			);
 	});
-*/
 
 }
 

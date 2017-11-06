@@ -202,7 +202,7 @@ Util.median = (function(){
 })();
 
 Util.getTime = function(){
-	new Date().getTime();
+	return new Date().getTime();
 };
 
 Util.stopwatch = (function() {
@@ -214,7 +214,7 @@ Util.stopwatch = (function() {
     };
 
     stopwatch.prototype.start = function() {
-        this.start_time = new Date().getTime();
+        this.start_time = Util.getTime();
         this.running = true;
     };
 
@@ -238,11 +238,15 @@ Util.stopwatch = (function() {
         this.run_time = 0;
     };
 
+    stopwatch.prototype.get = function(){
+    	return Util.getTime() - this.start_time;
+    }
+
     stopwatch.prototype.get_and_start = function(){
     	var old_start_time = this.start_time;
     	this.start_time = new Date().getTime();
     	return this.start_time - old_start_time;
-    }
+    };
 
     return stopwatch;
 })();
@@ -320,16 +324,16 @@ Util.ChartBuilder = (function(){
 		
 		var intervalId;
 		var datasets = [];
-		var xNum = _option.xNum || 100;
+		var timeSpan = _option.timeSpan || 10.0;
 		console.log(_datasets.length);
 		for(var i=0; i< _datasets.length; i++){
 			datasets.push({
 				label: _datasets[i].label,
-				fill: false,
-		 		lineTension: 0.2,
-		 		backgroundColor: "rgba(75,192,192,0.4)",
+				fill: true,
+		 		//lineTension: 0.2,
+		 		//backgroundColor: "rgba(75,192,192,0.4)",
 		 		borderColor: colors[i],
-		 		borderCapStyle: 'butt',
+		 		/*borderCapStyle: 'butt',
 		 		borderDash: [],
 		 		borderDashOffset: 0.0,
 		 		borderWidth: 1,
@@ -341,13 +345,14 @@ Util.ChartBuilder = (function(){
 		 		pointHoverBackgroundColor: colors[i],
 		 		pointHoverBorderColor: "rgba(220,220,220,1)",
 		 		pointHoverBorderWidth: 2,
-		 		pointRadius: 0,
+		 		*/
+		 		pointRadius: 0.6,
 		 		pointHitRadius: 10,
-		 		data: Util.ArrayBuilder(null).multiply(xNum)
+		 		data: []
 			});
 		}
 		var data = {
-		 	labels: Util.ArrayBuilder("").multiply(xNum),
+		 	labels: [],
 		 	datasets: datasets
 		};
 
@@ -356,12 +361,17 @@ Util.ChartBuilder = (function(){
 		var stepSize = _option.yStepSize || (yMax - yMin) / 10.0;
 
 		var option = {
-			showLines: true,
+			//showLines: true,
 			animation: false,
 			legend: {
-				display: false
+				//display: false
+			},
+			title: {
+				display: true,
+				text: "sensor values"
 			},
 			scales: {
+				
 				yAxes: [{
 					ticks: {
 						max: yMax,
@@ -370,14 +380,26 @@ Util.ChartBuilder = (function(){
 					},
 					gridLines: {
 						drawTicks: false
+					},
+					scaleLabel: {
+						display: true,
+						labelString: _option.yLabel
 					}
 				}],
 				xAxes: [{
-					gridLines: {
+					//type: 'time',
+					//distribution: 'series',
+					//type: 'linear',
+                	//position: 'bottom',
+					/*gridLines: {
 						display: true,
 						drawTicks: false
 					},
+					*/
 					ticks: {
+						max: 10,
+						min: 0
+						/*
 						fontSize: 10,
 						maxRotation: 10,
 						callback: function(value) {
@@ -385,25 +407,36 @@ Util.ChartBuilder = (function(){
 								return value;
 							} else {return null};
 						}
+						*/
 					}
+					
 				}]
 			}
 		};
 
-		var chart = Chart.Line(ctx, {
+		var chart = Chart.Scatter(ctx, {
 			data: data,
 			options: option
 		});
 
-		chart.addData = function(values, label = ""){
+		chart.addData = function(values, time, label = ""){
 			for(var i=0; i<values.length; i++){
-				this.data.datasets[i].data.shift();
-				this.data.datasets[i].data.push(values[i]);
+				while(this.data.datasets[i].data.length > 0 && this.data.datasets[i].data[0].x < time - timeSpan ){
+					this.data.datasets[i].data.shift();
+				}
+
+				this.data.datasets[i].data.push({
+					x: time,
+					y: values[i]
+				});
 		    }
 
 			this.data.labels.shift();
 
 		    this.data.labels.push(label);
+		    
+		    this.options.scales.xAxes[0].ticks.max = time;
+		    this.options.scales.xAxes[0].ticks.min = time - timeSpan;
 		    this.update();
 		};
 
@@ -419,10 +452,9 @@ Util.ChartBuilder = (function(){
 				counter ++;
 				if((counter % (1000 / interval)) == 0){
 					label = counter * interval / 1000;
-					label = "asa";
 				}
 
-				chart.addData(getFunc(), label);
+				chart.addData(getFunc(), counter, label);
 			}, interval);
 		};
 
