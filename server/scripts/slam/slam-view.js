@@ -16,7 +16,7 @@ function SlamView(container){
 
 		THREE.LinearMipMapLinearFilter = 1008;	
 
-		renderer = new THREE.WebGLRenderer({antialias: false});
+		renderer = new THREE.WebGLRenderer({antialias: Util.isPC()});
 		
 		renderer.setPixelRatio( sc_width/ sc_height );
 		renderer.setSize(sc_width, sc_height);

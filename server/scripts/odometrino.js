@@ -42,12 +42,14 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 	var $proximityButton = $("#proximity-button");
 	var $proximityText = $("#proximity-value");
 	var $rotateButton = $("#rotate-button");
+	var $calibButton = $("#calibration-button");
+	var $cameraButton = $("#camera-button");
+
 	$stopButton.on("click", function(){
 		console.log("stop");
 		_this.props[MOVE_STATUS] = 7;
 
-		_this.androidService.clearDeviceVelocity();
-		_this.androidService.clearDevicePosition();
+		
 
 		_this.androidService.stopDeviceCamera();
 		$("#video").hide();
@@ -59,32 +61,40 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 				$distanceValue.text(distance.toFixed(2));
 			}).catch(function(e){
 				console.warn(e);
-			});
-
-		_this.androidService.restartVisualOdometry();
-		
+			});		
 	});
 
-	$resetButton.on("click", function(){
-		console.log("reset");
-		//_this.props[MOVE_STATUS] = 1;
-
+	$cameraButton.click(function(){
+		console.log("camera");
 		// video
 		$("#video").show();
 		_this.androidService.initDeviceCamera($("#video").get(0));
 
 	});
 
+	$resetButton.on("click", function(){
+		console.log("reset");
+		//_this.props[MOVE_STATUS] = 1;
+		_this.androidService.clearDeviceVelocity();
+		_this.androidService.clearDevicePosition();
+
+		slam.clearPosition();
+		_this.androidService.restartVisualOdometry();
+		
+
+	});
+
 	$proximityButton.on("click", function(){
 		console.log("proximity");
-		_this.props[MOVE_STATUS] = STATUS_ROTATING;
 		_this.androidService.addDeviceProximityListener(function(event){
 			$proximityText.text(event.proximity);
 		});
 
 		throw new Error("sasda");
-		//a = b;
-		//console.error("sas");
+	});
+
+	$calibButton.click(function(){
+		Calibration();
 	});
 
 	var rotDir = 1;
@@ -321,7 +331,7 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 					
 					isGoStraight = true;
 					_this.goStraight(1);
-					await _this.sleep(2000);
+					await _this.sleep(0);
 
 					_this.stop();
 					await _this.sleep(100);
@@ -380,30 +390,37 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 
 
 	// sensor chart
+/*
 	var ctx = document.getElementById('myChart').getContext('2d');
 	var chart = Util.ChartBuilder.createLineChart(ctx,
 		[{label: "alpha"}, {label: "beta"}, {label: "gamma"}], 
 		{yMax: 180, yMin: -180, xNum: 100, yLabel: "radian"});
+
+	chart.startTimer();
+*/
 /*
+
 	chart.start(function(){
 			var o = _this.androidService.getDeviceOrientation();
 			return [o.alpha, o.beta, o.gamma];
 		},
 		100,);
-		*/
+		
 	
 	var w = new Util.stopwatch();
 	w.start();
+*/
+/*
 	_this.androidService.addDeviceOrientationListener(function(event){
 		chart.addData([
 			//event.deviceOrientation.alpha, 
 			_this.androidService.getSumRotation2D(), 
 			event.deviceOrientation.beta, 
 			event.deviceOrientation.gamma],
-			w.get() / 1000.0
+			//w.get() / 1000.0
 			);
 	});
-
+*/
 }
 
 Util.inherits(Odometrino, DroinoBase);

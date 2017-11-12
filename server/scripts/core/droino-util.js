@@ -255,6 +255,10 @@ Util.isNativeEnv = function(){
 	return !(typeof(nativeInterface) === 'undefined');
 };
 
+Util.isPC = function(){
+	return !(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+};
+
 Util.loadScript = function(url){
 	return new Promise((resolve, reject) => {
 		var script = document.createElement('script');
@@ -346,13 +350,13 @@ Util.ChartBuilder = (function(){
 		 		pointHoverBorderColor: "rgba(220,220,220,1)",
 		 		pointHoverBorderWidth: 2,
 		 		*/
-		 		pointRadius: 0.6,
+		 		pointRadius: 0.4,
 		 		pointHitRadius: 10,
 		 		data: []
 			});
 		}
 		var data = {
-		 	labels: [],
+		 	//labels: [],
 		 	datasets: datasets
 		};
 
@@ -397,7 +401,7 @@ Util.ChartBuilder = (function(){
 					},
 					*/
 					ticks: {
-						max: 10,
+						max: timeSpan,
 						min: 0
 						/*
 						fontSize: 10,
@@ -419,8 +423,18 @@ Util.ChartBuilder = (function(){
 			options: option
 		});
 
-		chart.addData = function(values, time, label = ""){
+		var updateFlag = false;
+
+		chart.addData = function(values, time){
+			
+			time = time !== "undefined" ? time : this.watch.get() / 1000.0;
+
 			for(var i=0; i<values.length; i++){
+				
+				if(values[i] == null){
+					continue;
+				}
+
 				while(this.data.datasets[i].data.length > 0 && this.data.datasets[i].data[0].x < time - timeSpan ){
 					this.data.datasets[i].data.shift();
 				}
@@ -431,14 +445,30 @@ Util.ChartBuilder = (function(){
 				});
 		    }
 
-			this.data.labels.shift();
+			//this.data.labels.shift();
 
-		    this.data.labels.push(label);
+		    //this.data.labels.push(label);
 		    
 		    this.options.scales.xAxes[0].ticks.max = time;
 		    this.options.scales.xAxes[0].ticks.min = time - timeSpan;
-		    this.update();
+		    
+		    updateFlag = true;
+
+		    //this.update();
 		};
+
+		function updateLoop(){
+
+			if(updateFlag){
+				updateFlag = false;
+				chart.update();
+			}
+
+			setTimeout(updateLoop, 1000);
+
+		}
+
+		updateLoop();
 
 		chart.stop = function(){
 			clearInterval(intervalId);
@@ -446,7 +476,7 @@ Util.ChartBuilder = (function(){
 
 		var counter = 0;
 		
-		chart.start = function(getFunc, interval){
+		chart.startInterval = function(getFunc, interval){
 			intervalId = setInterval(function(){
 				var label = "";
 				counter ++;
@@ -458,9 +488,106 @@ Util.ChartBuilder = (function(){
 			}, interval);
 		};
 
+		chart.startTimer = function(){
+			this.watch = new Util.stopwatch();
+			this.watch.start();
+		};
+
 		return chart;
 	}
 
 	return creators;
 
 })();
+
+Util.CircularBuffer = (function(){
+
+})();
+
+Util.TimedBuffer = (function(){
+
+	var TimedBuffer = function(timeSpan = 1000){
+	
+		this.watch = new Util.stopwatch();
+	
+		this._buffer = [];
+
+		this.speed = 0;
+
+		this.timeSpan = timeSpan;
+	};
+
+
+	TimedBuffer.prototype = {
+
+		start: function(){
+			this.watch.start();
+		},
+
+		push: function(value){
+			
+			var elapsedTime = this.watch.get();
+			
+
+			while(this._buffer.length > 0){
+
+				if(elapsedTime - this._buffer[0][0] < this.timeSpan){
+					break;
+				} 		
+
+				this._buffer.shift();		
+			}			
+
+			this._buffer.push([elapsedTime, value]);
+
+			if(this._buffer.length == 1){
+
+				this.speed = 0;
+			
+			} else {
+
+				this.speed = (value - this._buffer[0][1]) / 
+					(elapsedTime - this._buffer[0][0])
+					* 1000.0;
+			}
+		},
+
+		get: function(){
+
+			var len = this._buffer.length;
+
+			if(len == 0){
+				return null;
+			}
+
+			var elapsedTime = this.watch.get();
+
+			var speed = this.getSpeed();
+
+			return this._buffer[len - 1][1] +
+				speed * (elapsedTime - this._buffer[len - 1][0]) / 1000.0; 
+
+
+		},
+
+		getSpeed : function(){
+
+			var elapsedTime = this.watch.get();
+
+			var len = this._buffer.length;
+
+			if(len == 0 ||
+				elapsedTime - this._buffer[len - 1][0] > this.timeSpan){
+
+				this.speed = 0;
+
+			}
+
+			return this.speed; 
+
+		}
+	};
+
+	return TimedBuffer;
+})();
+

@@ -2,7 +2,7 @@ var Motor = function(arduino, opts){
 
 	var maxValue = 255;
 
-	var offset;
+	var offset = 0;
 
 	var currentValue;
 
@@ -18,7 +18,7 @@ var Motor = function(arduino, opts){
 
 	maxValue = opts.maxValue || maxValue;
 
-	offset = opts.offset || offset;
+	offset = opts.offset !== undefined ? opts.offset : offset;
 
 	currentValue = 0;
 

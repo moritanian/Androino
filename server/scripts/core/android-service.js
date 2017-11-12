@@ -220,7 +220,7 @@ var AndroidService = (function(){
 			var sumRotation2dUnit = 0; // +PI -PI 超えるごとに増減
 			var sumRotation2d = 0; 
 			var sumRotation2dDestination = 0; 
-			var rotation2dSpeed = 0;
+			var rotation2dBuffer;
 
 			var defaultOrientation = screen.width > screen.height ? "landscape" : "portrait";
 
@@ -448,17 +448,7 @@ var AndroidService = (function(){
 
 						sumRotation2d = rotation2D + sumRotation2dUnit * 2.0 * Math.PI;
 						
-
-						// rotationSpeed
-						if(deltaTime > 0){
-							var rotationCoeff = 0.2;
-
-							rotation2dSpeed = rotation2dSpeed * rotationCoeff + 
-								(lastRotation2d - rotation2D) * (1.0 - rotationCoeff) / deltaTime;
-
-							//console.log(rotation2dSpeed);
-
-						}
+						rotation2dBuffer.push(sumRotation2d);
 
 						lastRotation2d = rotation2D;
 
@@ -586,6 +576,8 @@ var AndroidService = (function(){
 				window.addEventListener( 'orientationchange', onScreenOrientationChangeEvent, false );
 				window.addEventListener( 'deviceorientation', onDeviceOrientationChangeEvent, false );
 
+				rotation2dBuffer = new Util.TimedBuffer(200);
+
 				// called from java native
 				window.addEventListener("deviceproximity", onDeviceProximityChangeEvent, false);
 				window.addEventListener("visualodometry", onVisualOdometryEvent, false);
@@ -610,8 +602,7 @@ var AndroidService = (function(){
 			};
 
 			this.getSumRotation2D = function(){
-				// TODO 時間補正
-				return sumRotation2d;
+				return rotation2dBuffer.get();
 			};
 
 			this.addSumRotation2DDestination = function(add){
@@ -624,7 +615,7 @@ var AndroidService = (function(){
 			};
 
 			this.getRotation2DSpeed = function(){
-				return rotation2dSpeed;
+				return rotation2dBuffer.getSpeed();
 			};
 
 			this.getDeviceVelocity = function(){

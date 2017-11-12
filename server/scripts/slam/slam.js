@@ -53,6 +53,7 @@ function Slam(mapContainer){
 
 	var myEstRotation = 0;
 	var odometryBasePosition;
+	var odometryBaseRotation;
 
 	var _motorR, _motorL;
 
@@ -109,32 +110,62 @@ function Slam(mapContainer){
 	};
 
 	this.newOdometryData = function(odometryData){
-		
+	
+		if(myEstRotation == null){
+			return;
+		}		
+
+		// vector target to mine
 		var odometryPos = new math.Vector3(
-			- odometryData.x,
-			- odometryData.y,
-			- odometryData.z	
+			 odometryData.x,
+			 odometryData.y,
+			 - odometryData.z	
 		);
 
-		// 初期化
+		var wOdometryPos = odometryPos.clone();
+
+		wOdometryPos.applyAxisAngle(AXIS_Y, myEstRotation);
+
+
+		// initialize                                           
 		if(odometryData.w == 1 || odometryBasePosition == null){
+
 			console.warn("restart!!");
 
-			var wOdometryPos = odometryPos.applyAxisAngle(AXIS_Y, myEstRotation);
-			odometryBasePosition = myEstPosition.clone().add(wOdometryPos);
+			console.log(odometryPos.x + " : " + odometryPos.y + " : " + odometryPos.z);
+
+			odometryBasePosition = myEstPosition.clone().sub(wOdometryPos);
+			odometryBaseRotation = myEstRotation;
 
 			return;
 		}
 
+		// 
+		if(Math.abs(odometryBaseRotation - myEstRotation) > Math.PI / 3.0){
+			new AndroidService().restartVisualOdometry();
+			console.log("request restart");
+
+		}
+
 		console.log(odometryPos.x + " : " + odometryPos.y + " : " + odometryPos.z);
+		console.log(myEstRotation);
 
-
-		var wOdometryPos = odometryPos.applyAxisAngle(AXIS_Y, myEstRotation);
-		myEstPosition = odometryBasePosition.clone().sub(wOdometryPos);
+		myEstPosition = odometryBasePosition.clone().add(wOdometryPos);
 
 
 		if(this.mapView)
 			this.mapView.updateMine(myEstPosition, myEstRotation);
+	};
+
+	this.clearPosition = function(){
+
+		myEstPosition.x = 0;
+		myEstPosition.y = 0;
+		myEstPosition.z = 0;
+
+		odometryBasePosition.x = 0;
+		odometryBasePosition.y = 0;
+		odometryBasePosition.z = 0;
 	};
 
 	this.getMyEstimatePosition = function(){

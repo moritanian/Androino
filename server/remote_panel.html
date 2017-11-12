@@ -60,6 +60,14 @@
 		display: none;
 	}
 
+	#reset-button {
+		float: left;
+	}
+
+	#chart {
+		clear: both;
+	}
+
 	
 
 </style>
@@ -77,6 +85,7 @@
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
 <script type="text/javascript" src="./scripts/core/droino-util.js"></script>
 
+<script type="text/javascript" src="./scripts/libs/Chart.bundle.min.js"></script>
 
 
 <script type="text/javascript" src="./scripts/core/droino-base.js"></script>
@@ -99,13 +108,22 @@ $(function(){
 	slam.setDepthSensorLocation({
 		x:  60,
 		z:  60
-	}, - Math.PI/ 2.0)
+	}, 0); //- Math.PI/ 2.0);
 
 	function animate(){
 		slam.mapView.update();
 		requestAnimationFrame(animate);
 	}
 	animate();
+
+	var ctx = document.getElementById('chart').getContext('2d');
+	var chart = Util.ChartBuilder.createLineChart(ctx,
+		[{label: "rotation"}, {label: "rotationSpeed"}, {label: "motor"}], 
+		{yMax: 360, yMin: -360, timeSpan: 320, yLabel: "radian"});
+
+	//chart.startTimer();
+
+	var myRotation;
 
 
 	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
@@ -141,7 +159,11 @@ $(function(){
 
    		if(e.rotation){
 
+   			myRotation = e.rotation;
+
    			slam.setRotation(e.rotation);
+
+   			//chart.addData([Util.radToDeg(e.rotation + 100)]);
 
    		}
 
@@ -154,7 +176,16 @@ $(function(){
    	});
 
    	stream.onMessage(stream.MESSAGE_TYPE.CALIBRATION, function(e){
-
+   		var rotationData = e.data.rotationData;
+   		if(rotationData){
+   			console.log(rotationData);
+   			chart.addData([
+   				Util.radToDeg(myRotation) / 2.0 + 100, 
+   				Util.radToDeg(rotationData[1]) * 2.0,
+   				rotationData[0]
+   				//10.0
+   			], rotationData[2] / 1000);
+   		}
    	});
 
 	stream.startStream();
@@ -175,6 +206,9 @@ $(function(){
 		<li>
 			<button id="reset-button">reset</button>
 			<div id="distance-text"></div>
+		</li>
+
+		<li><canvas id="chart">
 		</li>
 	
 		<li class="log-container">
