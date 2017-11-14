@@ -188,6 +188,7 @@ var AndroidService = (function(){
 
 		(function IMUService(){
 
+			var initListenerFlag = false;
 			var deviceOrientation = {alpha: 0.0, beta: 0.0, gamma:0.0};
 			var screenOrientation = 0;
 			var IMUDispatcher = new EventDispatcher();
@@ -196,6 +197,7 @@ var AndroidService = (function(){
 			var VISUAL_ODOMETRY_EVENT = "VISUAL_ODOMETRY_EVENT";
 			var DEVICE_ORIENTATION_EVENT = "DEVICE_ORIENTATION_EVENT";
 			var SCREEN_ORIENTATION_EVENT = "SCREEN_ORIENTATION_EVENT";
+			var DISTANCE_EVENT = UltrasonicDistanceSensor.DISTANCE_EVENT;
 
 			// motion
 			var motionData = {
@@ -570,13 +572,31 @@ var AndroidService = (function(){
 
 			};
 
+			this.addDistanceEventListener = function(func){
+
+				window.addEventListener(DISTANCE_EVENT, func);
+
+			};
+
+			this.removeDistanceEventListener = function(func){
+
+				window.removeEventListener(DISTANCE_EVENT, func);
+			
+			};
+
 			this.initIMUListener = function(){
+
+				if(initListenerFlag){
+					return;
+				}
+
+				initListenerFlag = true;
 
 				window.addEventListener( 'devicemotion', onDeviceMotionChangeEvent, false );
 				window.addEventListener( 'orientationchange', onScreenOrientationChangeEvent, false );
 				window.addEventListener( 'deviceorientation', onDeviceOrientationChangeEvent, false );
 
-				rotation2dBuffer = new Util.TimedBuffer(200);
+				rotation2dBuffer = new Util.TimedBuffer(1000);
 
 				// called from java native
 				window.addEventListener("deviceproximity", onDeviceProximityChangeEvent, false);
@@ -607,6 +627,11 @@ var AndroidService = (function(){
 
 			this.addSumRotation2DDestination = function(add){
 				sumRotation2dDestination += add;
+				return sumRotation2dDestination;
+			};
+
+			this.setSumRotation2DDestination = function(rotation){
+				sumRotation2dDestination += rotation;
 				return sumRotation2dDestination;
 			};
 
@@ -682,7 +707,7 @@ var AndroidService = (function(){
 
 
 			// 目標角度を現在角度にリセット
-			this.resetSumRotation2D = function(){
+			this.resetSumRotation2DDestination = function(){
 				sumRotation2dDestination = sumRotation2d; 
 			};
 
@@ -784,28 +809,119 @@ var AndroidService = (function(){
 				CALIBRATION: 6
 			};
 
+			const ARDUINO_FUNC_NAMES = [
+				"connect", "disconnect", "pinMode", 
+				"digitalWrite", "digitalRead", 
+				"analogWrite", "analogRead",
+				"sendSysx", "setSysxListener",
+				"sendString"
+			];
+
 			function StreamBase(){
-			
+				
+				this.onmessageDispatcher = new EventDispatcher();
+
+				this.arduino = (function(){
+
+					var props = {};
+
+					var call = (funcName, args) => {
+
+						this.postMessage({
+							type: MESSAGE_TYPE.ARDUINO,
+							funcName: funcName,
+							args: args
+						});
+
+					};
+
+					for(var i in ARDUINO_FUNC_NAMES){
+						props[ARDUINO_FUNC_NAMES[i]] = function(){
+							call(ARDUINO_FUNC_NAMES[i], arguments);
+						};
+					}
+
+					return {
+
+					}
+
+				}).call(this);
 			}
 
-			StreamBase.prototype = {
-				log: function(l){
-					this.push();
-				},
-				warn: function(w){
+			StreamBase.prototype = Object.assign(StreamBase.prototype, {
 
+				log: function(l){
+					this.postMessage({
+						type: MESSAGE_TYPE.LOG,
+						value: l
+					});
+				},
+				warn: function(l){
+					this.postMessage({
+						type: MESSAGE_TYPE.WARN,
+						value: l
+					});
 				},
 				error: function(message, file, line, col, error){
-
+					this.postMessage({
+						type: MESSAGE_TYPE.ERROR,
+						message: message,
+						file: file,
+						line: line,
+						col: col,
+						error: error
+					});
 				},
-				map: function(mine, distance){
-
+				map: function(data){
+					this.postMessage({
+						type: MESSAGE_TYPE.MAP,
+						position: data.position,
+						rotation: data.rotation,
+						distance: data.distance
+					});
 				},
-				arduino: function(){
+				calibration: function(data){
+					this.postMessage({
+						type: MESSAGE_TYPE.CALIBRATION,
+						data: data
+					});
+				},
+				onMessage: function(type, func){
+					this.onmessageDispatcher.addEventListener(type, func);
+				},
+				postMessage: function(obj){
+					console.warn("postMessage should be overrided");
+				},
+				setDefaultListener: function(arduino){
+					
+					this.onMessage(this.MESSAGE_TYPE.LOG, function(e){
+						console.log(e.value);
+   					});
+
+					this.onMessage(this.MESSAGE_TYPE.WARN, function(e){
+						console.warn(e.value);
+				   	});
+
+				   	this.onMessage(this.MESSAGE_TYPE.ERROR, function(e){
+				   		// TODO 送られてきたエラーが表示されるように
+				   		console.log(e.message);
+				   		console.log(e.file);
+				   		console.log(e.line);
+						var err = new Error(e.message, e.file, e.line);
+						throw err;
+				   	});
+
+				   	if(arduino != null){
+   	
+						this.onMessage(this.MESSAGE_TYPE.ARDUINO, function(e){
+					   		arduino[e.funcName].call(arduino, e.args);
+					   	});
+
+					}
 
 				},
 				MESSAGE_TYPE: MESSAGE_TYPE
-			};
+			});
 			
 			this.ConsoleStream = function(){
 				
@@ -839,16 +955,13 @@ var AndroidService = (function(){
 				
 				instance.SocketStream.base(this, 'constructor');
 
-				var onmessageDispatcher = new EventDispatcher();
-
-
 				this.startStream = function(){
 
 					var WSRoomName = "androino-stream";
 		
-					instance.WSinit(WSUrl, WSRoomName, function(message){
+					instance.WSinit(WSUrl, WSRoomName, (message) =>{
 						
-						onmessageDispatcher.dispatchEvent(message);
+						this.onmessageDispatcher.dispatchEvent(message);
 						
 					});
 				};
@@ -857,54 +970,8 @@ var AndroidService = (function(){
 					this.WSdisconnect();
 				};
 
-				this.log = function(l){
-					this.postMessage({
-						type: MESSAGE_TYPE.LOG,
-						value: l
-					});
-				};
-
-				this.warn = function(l){
-					this.postMessage({
-						type: MESSAGE_TYPE.WARN,
-						value: l
-					});
-				};
-
-				this.error = function(message, file, line, col, error){
-					this.postMessage({
-						type: MESSAGE_TYPE.ERROR,
-						message: message,
-						file: file,
-						line: line,
-						col: col,
-						error: error
-					});
-				};
-
-				this.map = function(data){
-					this.postMessage({
-						type: MESSAGE_TYPE.MAP,
-						position: data.position,
-						rotation: data.rotation,
-						distance: data.distance
-					});
-				};
-
-				this.calibration = function(data){
-					this.postMessage({
-						type: MESSAGE_TYPE.CALIBRATION,
-						data: data
-					});
-				};
-
 				this.postMessage = function(obj){
 					instance.WSpost(obj);
-				};
-
-
-				this.onMessage = function(type, func){
-					onmessageDispatcher.addEventListener(type, func);
 				};
 
 				setupStream(this);
@@ -913,9 +980,45 @@ var AndroidService = (function(){
 
 			Util.inherits(this.SocketStream, StreamBase);
 
-			this.RTCStream = function(){
+			this.RTCStream = function(WSUrl){
+				
+				instance.RTCStream.base(this, 'constructor');
+
+				var channel;
+
+				this.startStream = function(){
+
+					const WSRoomName = "androino-rtc-stream";
+					
+					channel = new Channel(WSUrl, function(){
+
+					}, (msg) => {
+
+            			var msgObj = JSON.parse(msg);
+
+            			this.onmessageDispatcher.dispatchEvent(msgObj);
+
+					}, function(){
+
+					}, WSRoomName);
+				};
+
+				this.endStream = function(){
+					channel.hangUp();
+				};
+
+				this.postMessage = function(obj){
+
+					channel.sendAlongDataChannel(JSON.stringify(obj));
+
+				};
+
+				setupStream(this);
 
 			};
+
+			Util.inherits(this.RTCStream, StreamBase);
+
 
 			/* 
 			console , error handling

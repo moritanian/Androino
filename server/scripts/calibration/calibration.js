@@ -4,7 +4,7 @@ var Calibration = async function(){
 	var androidService = new AndroidService();
 
 	const maxValue = 255;
-	const minValue = 50;
+	const minValue = 100;
 
 	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
 
@@ -85,8 +85,8 @@ var Calibration = async function(){
 
 		var lastRotation;
 
-		const sleepTime = 200;
-		const step =100;
+		const sleepTime = 300;
+		const step =77;
 
 		var status = 0;
 

@@ -15,6 +15,12 @@
 		- motorL
 		- motorR
 
+	input:
+		- twoWheels (estimation)
+		- odometry (observation)
+		- rotation　(observation)
+		- depth (observation)
+
 	# TODO モータ出力と速度の関係の統計データ解析
 
 	## point データ
@@ -58,11 +64,6 @@ function Slam(mapContainer){
 	var _motorR, _motorL;
 
 	var AXIS_Y = new math.Vector3(0, 1.0, 0);
-
-	this.setMotors = function(motorR, motorL){
-		_motorR = motorR;
-		_motorL = motorL;
-	};
 
 	this.setDepthSensorLocation = function(pos, rot){
 		depthSensor.x = pos.x || 0;
@@ -140,17 +141,19 @@ function Slam(mapContainer){
 			return;
 		}
 
-		// 
-		if(Math.abs(odometryBaseRotation - myEstRotation) > Math.PI / 3.0){
+		/*
+		if(Math.abs(odometryBaseRotation - myEstRotation) > Math.PI / 4.0){
 			new AndroidService().restartVisualOdometry();
 			console.log("request restart");
 
 		}
-
-		console.log(odometryPos.x + " : " + odometryPos.y + " : " + odometryPos.z);
-		console.log(myEstRotation);
+		*/
 
 		myEstPosition = odometryBasePosition.clone().add(wOdometryPos);
+
+		console.log(odometryPos.x + " : " + odometryPos.y + " : " + odometryPos.z);
+		console.log(myEstPosition.x+ " : " + myEstPosition.y + " : " + myEstPosition.z);
+		console.log(myEstRotation);
 
 
 		if(this.mapView)
@@ -169,11 +172,7 @@ function Slam(mapContainer){
 	};
 
 	this.getMyEstimatePosition = function(){
-		return {
-			x: myEstPosition.x,
-			y: myEstPosition.y,
-			z: myEstPosition.z
-		};
+		return myEstPosition.clone();
 	};
 
 	this.reset = function(){

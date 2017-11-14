@@ -82,12 +82,15 @@
 <script type="text/javascript" src="./scripts/libs/three.min.js"></script>
 <script type="text/javascript" src="./scripts/libs/OrbitControls.js"></script>
 
+<script type="text/javascript" src="./scripts/components/ultrasonic_distance_sensor.js"></script>
+
 <script type="text/javascript" src="./scripts/core/android-service.js"></script>
 <script type="text/javascript" src="./scripts/core/droino-util.js"></script>
 
 <script type="text/javascript" src="./scripts/libs/Chart.bundle.min.js"></script>
 
 
+<script type="text/javascript" src="./scripts/core/channel.js"></script>
 <script type="text/javascript" src="./scripts/core/droino-base.js"></script>
 <script type="text/javascript" src="./scripts/odometrino.js"></script>  
 <script type="text/javascript" src="./scripts/slam/slam.js"></script>  
@@ -129,24 +132,10 @@ $(function(){
 	var WSUrl =  "https://rtc-world-s.herokuapp.com/";
 	//var WSUrl =  "http://localhost:3002/";
 
-	var stream = new service.SocketStream(WSUrl);
+	//var stream = new service.SocketStream(WSUrl);
+	var stream = new service.RTCStream(WSUrl);
 
-	stream.onMessage(stream.MESSAGE_TYPE.LOG, function(e){
-		console.log(e.value);
-   	});
-
-	stream.onMessage(stream.MESSAGE_TYPE.WARN, function(e){
-		console.warn(e.value);
-   	});
-
-   	stream.onMessage(stream.MESSAGE_TYPE.ERROR, function(e){
-   		// TODO 送られてきたエラーが表示されるように
-   		console.log(e.message);
-   		console.log(e.file);
-   		console.log(e.line);
-		var err = new Error(e.message, e.file, e.line);
-		throw err;
-   	});
+	stream.setDefaultListener();
 
    	stream.onMessage(stream.MESSAGE_TYPE.MAP, function(e){
    		//console.log(e);
@@ -180,7 +169,7 @@ $(function(){
    		if(rotationData){
    			console.log(rotationData);
    			chart.addData([
-   				Util.radToDeg(myRotation) / 2.0 + 100, 
+   				Util.radToDeg(myRotation) / 4.0 + 300, 
    				Util.radToDeg(rotationData[1]) * 2.0,
    				rotationData[0]
    				//10.0

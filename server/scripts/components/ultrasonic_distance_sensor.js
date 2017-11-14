@@ -1,3 +1,4 @@
+// TODO distanceSensor listen stop のみにする
 function UltrasonicDistanceSensor(arduino, opts){
 	
 	this.arduino = arduino;
@@ -39,6 +40,7 @@ function UltrasonicDistanceSensor(arduino, opts){
 
 UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_REQUEST_COMMAND = 0B00100000;
 UltrasonicDistanceSensor.US_DISTANCE_MEASUREMENT_RESULT_COMMAND = 0B00100001;
+UltrasonicDistanceSensor.DISTANCE_EVENT = "DISTANCE_EVENT";
 
 UltrasonicDistanceSensor.prototype.measureLow = function(){
 
@@ -110,4 +112,48 @@ UltrasonicDistanceSensor.prototype.measure = function(execCount = 10, trimmeanRa
 		measureFunc();
 
 	});
+};
+
+UltrasonicDistanceSensor.prototype.startInterval = function(){
+
+	var instance = this;
+
+	function dispatchDistanceEvent(distance){
+		
+		var distanceEvent = new Event(
+			UltrasonicDistanceSensor.DISTANCE_EVENT);
+
+		distanceEvent.distance = distance;
+
+		window.dispatchEvent(distanceEvent);
+
+	}
+
+	function measureExec(){
+
+		instance.timeoutHandler = setTimeout(measureExec, 60);
+
+				
+		instance.measureLow()
+			.then(function(distance){
+				
+				dispatchDistanceEvent(distance);
+
+			}).catch(function(e){
+				stream.error(e);
+				console.error(e);
+			});
+	}
+
+	measureExec();
+};
+
+UltrasonicDistanceSensor.prototype.stopInterval = function(){
+
+	if(this.timeoutHandler != null){
+
+		clearTimeout(timeoutHandler);
+
+	}
+
 }

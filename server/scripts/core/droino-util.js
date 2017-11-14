@@ -502,6 +502,113 @@ Util.ChartBuilder = (function(){
 
 Util.CircularBuffer = (function(){
 
+	function CircularBuffer(size){
+		
+		this.length = 0;
+
+		this.size = size;
+
+		this._buffer = [];
+
+		this.head = -1;
+
+		this.sum = 0;
+	
+	}
+
+	CircularBuffer.prototype = {
+
+		fill: function(value = 0){
+
+			for(var i=0; i<this.size; i++){
+
+				this._buffer[i] = value;
+
+			}
+
+			this.head = 0;
+
+			this.length = this.size;
+
+			this.sum = this.length * value;
+
+			return this.length;
+
+		},
+
+		append: function(value){
+			
+			this.head++;
+
+			if(this.head == this.size){
+
+				this.head = 0;	
+			
+			}
+
+			if(this.length < this.size){
+
+				this._buffer.push(value);
+
+				this.length ++;
+
+				this.sum += value;
+
+				return this.length;
+			}
+
+			this.sum -= this._buffer[this.head];
+
+			this.sum += this.value;
+
+			this._buffer[this.head] = value;
+
+			return this.length;
+
+		},
+
+		get: function(position){
+
+			if(position > this.length - 1){
+
+				return null;
+			
+			}
+
+			var index = this.head - position;
+
+			if(index < 0){
+
+				index += this.length;
+
+			}
+
+			return this._buffer[index];
+
+		},
+
+		average: function(){
+
+			return this.sum / this.length;
+
+		},
+
+		calcDiffArea: function(value){
+
+			var area = 0;
+
+			for(var i=0; i<this.length; i++){
+				
+				area += Math.abs(this._buffer[i] - value);
+
+			}
+
+			return area;
+			
+		}
+	};
+
+
 })();
 
 Util.TimedBuffer = (function(){

@@ -14,7 +14,8 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 	var stream; 
 	
 	this.onReady = function(){
-		stream = new this.androidService.SocketStream(WSUrl);
+		//stream = new this.androidService.SocketStream(WSUrl);
+		stream = new this.androidService.RTCStream(WSUrl);
 
 		stream.startStream();
 	}
@@ -44,6 +45,7 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 	var $rotateButton = $("#rotate-button");
 	var $calibButton = $("#calibration-button");
 	var $cameraButton = $("#camera-button");
+	var $strategyButton = $("#strategy-button");
 
 	$stopButton.on("click", function(){
 		console.log("stop");
@@ -95,6 +97,22 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 
 	$calibButton.click(function(){
 		Calibration();
+	});
+
+	$strategyButton.click(() => {
+
+		console.log("strategyButton");
+
+		var twoWheels = new TwoWheels(
+			_this.arduino, 
+			MOTOR_L1_PIN, 
+			MOTOR_L2_PIN, 
+			MOTOR_R1_PIN, 
+			MOTOR_R2_PIN,
+			100, 40);
+
+		new StandardStrategy(twoWheels, distanceSensor, slam, stream).start();
+	
 	});
 
 	var rotDir = 1;
@@ -206,7 +224,7 @@ function Odometrino(WSUrl =  "http://localhost:3002/"){
 		var ALLOW_RAD_SPAN = Util.degToRad(0.2); // 誤差許容角度
 		console.log(ALLOW_RAD_SPAN);
 	
-		this.androidService.resetSumRotation2D(); 
+		this.androidService.resetSumRotation2DDestination(); 
 		this.androidService.addSumRotation2DDestination(rotation);
 
 		return new Promise(function(resolve, reject){
