@@ -23,7 +23,7 @@ gulp.task('ws', function(){
     
 });
 
-gulp.task('browserify',['clean'], function(callback) {
+gulp.task('browserify', function(callback) {
     gulp.src(['./scripts/calibration/*.js',
              './scripts/components/*.js',
              './scripts/core/*.js',
@@ -51,6 +51,8 @@ gulp.task('minify', ['browserify'], function() {
          //.pipe(source('androino.min.js'))
         .pipe(gulp.dest('./build/'));
 });
+
+gulp.task('build', ['clean', 'minify']);
 
 /// Auto rebuild and host
 gulp.task('default',['server']);
